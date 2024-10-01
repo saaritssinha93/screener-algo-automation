@@ -50,3 +50,4 @@ kite = KiteConnect(api_key=key_secret[0])
 data = kite.generate_session(request_token, api_secret=key_secret[1])
 with open('access_token.txt', 'w') as file:
         file.write(data["access_token"])
+        
