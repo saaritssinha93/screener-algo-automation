@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Zerodha kiteconnect automated authentication
-"""
-
 from kiteconnect import KiteConnect
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -42,3 +37,17 @@ def autologin():
     driver.quit()
 
 autologin()
+
+#generating and storing access token - valid till 6 am the next day
+request_token = open("request_token.txt",'r').read()
+key_secret = open("api_key.txt",'r').read().split()
+kite = KiteConnect(api_key=key_secret[0])
+data = kite.generate_session(request_token, api_secret=key_secret[1])
+with open('access_token.txt', 'w') as file:
+        file.write(data["access_token"])
+        
+        
+        #get dump of all NSE instruments
+instrument_dump = kite.instruments("NSE")
+instrument_df = pd.DataFrame(instrument_dump)
+instrument_df.to_csv("NSE_Instruments.csv",index=False) 
