@@ -1,30 +1,34 @@
 # -*- coding: utf-8 -*-
 """
 Zerodha kiteconnect automated authentication
-
-@author: Mayank Rasu (http://rasuquant.com/wp/)
 """
 
 from kiteconnect import KiteConnect
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
+import pandas as pd
 from pyotp import TOTP
 
 
-cwd = os.chdir("D:\\OneDrive\\Udemy\\Zerodha KiteConnect API\\1_account_authorization")
+cwd = os.chdir("C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation")
 
 def autologin():
     token_path = "api_key.txt"
     key_secret = open(token_path,'r').read().split()
     kite = KiteConnect(api_key=key_secret[0])
-    service = webdriver.chrome.service.Service('./chromedriver')
-    service.start()
+
+# Use WebDriver Manager to download and setup chromedriver automatically
+    service = Service(ChromeDriverManager().install())
+    
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options = options.to_capabilities()
-    driver = webdriver.Remote(service.service_url, options)
+# Uncomment this if you want to run headless
+# options.add_argument('--headless')
+
+    driver = webdriver.Chrome(service=service, options=options)
     driver.get(kite.login_url())
     driver.implicitly_wait(10)
     username = driver.find_element(By.XPATH,'/html/body/div[1]/div/div[2]/div[1]/div/div/div[2]/form/div[1]/input')
@@ -52,3 +56,9 @@ kite = KiteConnect(api_key=key_secret[0])
 data = kite.generate_session(request_token, api_secret=key_secret[1])
 with open('access_token.txt', 'w') as file:
         file.write(data["access_token"])
+
+
+        #get dump of all NSE instruments
+instrument_dump = kite.instruments("NSE")
+instrument_df = pd.DataFrame(instrument_dump)
+instrument_df.to_csv("NSE_Instruments.csv",index=False) 
