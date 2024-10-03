@@ -16,19 +16,11 @@ logging.basicConfig(level=logging.INFO)
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
 
-# Nifty 50 stocks list (as of the most recent known set of companies)
-nifty50_stocks = [
-    'ADANIPORTS', 'ASIANPAINT', 'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 
-    'BAJAJFINSV', 'BPCL', 'BHARTIARTL', 'BRITANNIA', 'CIPLA', 
-    'COALINDIA', 'DIVISLAB', 'DRREDDY', 'EICHERMOT', 'GRASIM', 
-    'HCLTECH', 'HDFCBANK', 'HDFC', 'HEROMOTOCO', 'HINDALCO', 
-    'HINDUNILVR', 'ICICIBANK', 'ITC', 'INDUSINDBK', 'INFY', 
-    'JSWSTEEL', 'KOTAKBANK', 'LT', 'M&M', 'MARUTI', 
-    'NESTLEIND', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 
-    'SBILIFE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATACONSUM', 
-    'TATAMOTORS', 'TATASTEEL', 'TECHM', 'TITAN', 'ULTRACEMCO', 
-    'UPL', 'WIPRO'
+# Stocks
+shares = [
+    'XYZ', 'ABC'
 ]
+
 
 # Known market holidays for 2024 (example, you can update this list)
 market_holidays = [
@@ -197,8 +189,8 @@ def print_high_growth_stocks():
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
 
-# Example usage: Fetch last close, live price, and percentage change for Nifty 50 stocks
-for stock in nifty50_stocks:
+# Example usage: Fetch last close, live price, and percentage change for shares
+for stock in shares:
     print_price_comparison(stock)
 
 # Print all stocks with 2% or more change
