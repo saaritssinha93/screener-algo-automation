@@ -132,10 +132,10 @@ def fetch_live_price(symbol):
         logging.error(f"Error fetching live price for {symbol}: {e}")
         return None
 
-# Global list to store stocks with 2% or more growth
-high_growth_stocks = []
+# Global dictionary to store stocks and their percentage changes
+high_growth_stocks = {}
 
-# Function to print last closing price, current price, and percentage change
+# Modify the print_price_comparison function to store percentage change
 def print_price_comparison(symbol):
     """Prints last market day closing price, current price, and percentage change."""    
     # Find the last trading day
@@ -166,8 +166,8 @@ def print_price_comparison(symbol):
                 # Check if the percentage change is 2% or more
                 if percent_change >= 2:
                     logging.info(f"{symbol} has increased by {percent_change:.2f}%, which is above 2%.")
+                    high_growth_stocks[symbol] = percent_change  # Store percentage change
                     print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}% (Above 2% growth)")
-                    high_growth_stocks.append(symbol)  # Add to the list of high growth stocks
                 else:
                     print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}%")
             else:
@@ -177,14 +177,17 @@ def print_price_comparison(symbol):
     else:
         logging.error(f"Could not fetch historical data for {symbol}")
 
-# Function to print all stocks with 2% or more change
+# Modified function to print all stocks with 2% or more change in descending order
 def print_high_growth_stocks():
-    """Prints all stocks with a percentage change of 2% or more."""
+    """Prints all stocks with a percentage change of 2% or more in descending order."""
     if high_growth_stocks:
+        # Sort stocks by percentage change in descending order
+        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda item: item[1], reverse=True)
+        
         logging.info("Stocks with 2% or more increase:")
         print("Stocks with 2% or more increase:")
-        for stock in high_growth_stocks:
-            print(stock)
+        for stock, percent in sorted_stocks:
+            print(f"{stock}: {percent:.2f}%")
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
