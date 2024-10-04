@@ -8,6 +8,7 @@ import logging
 import os
 import datetime as dt
 import pandas as pd
+import time
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -258,20 +259,38 @@ for share in shares:
     if metrics and metrics[2] is not None:  # Ensure percent_change is not None
         etf_metrics.append(metrics)
 
-# Rank the ETFs based on % Change in ascending order
-ranked_etfs = sorted(etf_metrics, key=lambda x: x[2] if x[2] is not None else float('inf'))  # All ETFs sorted in ascending order
-bottom_ten_etfs = ranked_etfs[:10]  # Bottom 10 based on % Change
+# Run analysis every 30 minutes
+while True:
+    try:
+        # Collect metrics for all shares
+        etf_metrics = []
+        for share in shares:
+            metrics = calculate_etf_metrics(share)
+            if metrics and metrics[2] is not None:  # Ensure percent_change is not None
+                etf_metrics.append(metrics)
 
-# Prepare data for CSV
-ranked_data = []
-for rank, (symbol, diff, percent_change) in enumerate(bottom_ten_etfs, start=1):
-    if percent_change is not None:
-        ranked_data.append({"Rank": rank, "Symbol": symbol, "% Change": f"{percent_change:.2f}%"})
+        # Rank the ETFs based on % Change in ascending order
+        ranked_etfs = sorted(etf_metrics, key=lambda x: x[2] if x[2] is not None else float('inf'))  # All ETFs sorted in ascending order
+        bottom_ten_etfs = ranked_etfs[:10]  # Bottom 10 based on % Change
 
-# Create a DataFrame and save it to CSV
-ranked_df = pd.DataFrame(ranked_data)
-ranked_df.to_csv("etfs_to_buy.csv", index=False)
+        # Prepare data for CSV
+        ranked_data = []
+        for rank, (symbol, diff, percent_change) in enumerate(bottom_ten_etfs, start=1):
+            if percent_change is not None:
+                ranked_data.append({"Rank": rank, "Symbol": symbol, "% Change": f"{percent_change:.2f}%"})
 
-# Print the ranking list
-print("Bottom 10 ETFs based on % Change from 20DMA:")
-print(ranked_df)
+        # Create a DataFrame and save it to CSV
+        ranked_df = pd.DataFrame(ranked_data)
+        ranked_df.to_csv("etfs_to_buy.csv", index=False)
+
+        # Print the ranking list
+        print("Bottom 10 ETFs based on % Change from 20DMA:")
+        print(ranked_df)
+
+        # Wait for 30 minutes before the next iteration
+        time.sleep(1800)
+
+    except Exception as e:
+        logging.error(f"Error during execution: {e}")
+        # Wait for 30 minutes even if there's an error
+        time.sleep(1800)
