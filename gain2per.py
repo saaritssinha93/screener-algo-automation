@@ -258,12 +258,20 @@ def print_price_comparison(symbol):
                 # Check if the percentage change is 2% or more
                 if percent_change >= 2:
                     logging.info(f"{symbol} has increased by {percent_change:.2f}%, which is above 2%.")
-                    # Volume change logic
+                    
+                    # Check if volume data for the last 15 minutes is available
                     if volume_data_15m is not None and not volume_data_15m.empty:
                         last_volume = volume_data_15m['volume'].iloc[-1]  # Volume for last 15 minutes
                         last_day_volume = ohlc_data['volume'].iloc[-1]  # Volume for last trading day
 
-                        volume_change = ((last_volume - last_day_volume) / last_day_volume) * 100 if last_day_volume > 0 else float('inf')
+                        logging.info(f"15-min volume: {last_volume}, Last day volume: {last_day_volume}")
+
+                        # Handle missing or zero volumes
+                        if last_day_volume > 0:
+                            volume_change = ((last_volume - last_day_volume) / last_day_volume) * 100
+                        else:
+                            volume_change = float('inf')  # Handle zero volume edge case
+                        
                         logging.info(f"Volume Change for {symbol}: {volume_change:.2f}%")
                         
                         # Print the output in a formatted way
@@ -271,6 +279,7 @@ def print_price_comparison(symbol):
                               f"Percentage Change: {percent_change:.2f}%, Volume Change: {volume_change:.2f}%")
                         high_growth_stocks[symbol] = (percent_change, volume_change)  # Store as a tuple
                     else:
+                        logging.error(f"15-minute volume data not available for {symbol}")
                         print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, "
                               f"Percentage Change: {percent_change:.2f}%, Volume Change: Data not available")
                 else:
@@ -282,6 +291,7 @@ def print_price_comparison(symbol):
             logging.error(f"'close' column missing in OHLC data for {symbol}")
     else:
         logging.error(f"Could not fetch historical data for {symbol}")
+
 
 # Modified function to print the high growth stocks
 def print_high_growth_stocks():
