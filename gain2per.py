@@ -117,6 +117,7 @@ shares = [
     'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
     'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
     'WIPRO', 'ZENSARTECH'
+    
 ]
 
 # Known market holidays for 2024 (example)
