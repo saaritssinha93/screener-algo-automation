@@ -58,7 +58,17 @@ with open('access_token.txt', 'w') as file:
         file.write(data["access_token"])
 
 
-        #get dump of all NSE instruments
-instrument_dump = kite.instruments("NSE")
-instrument_df = pd.DataFrame(instrument_dump)
-instrument_df.to_csv("NSE_Instruments.csv",index=False) 
+# Get dump of all NSE instruments
+nse_instrument_dump = kite.instruments("NSE")
+nse_instrument_df = pd.DataFrame(nse_instrument_dump)
+
+# Get dump of all BSE instruments
+bse_instrument_dump = kite.instruments("BSE")
+bse_instrument_df = pd.DataFrame(bse_instrument_dump)
+
+# Merge the NSE and BSE data
+merged_instrument_df = pd.concat([nse_instrument_df, bse_instrument_df])
+
+# Save the merged data to a single CSV
+merged_instrument_df.to_csv("Merged_NSE_BSE_Instruments.csv", index=False)
+

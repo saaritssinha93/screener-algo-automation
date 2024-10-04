@@ -22,7 +22,7 @@ os.chdir(cwd)
 # Stocks
 shares = [
     'AARTIDRUGS', 'AARTISURF', 'ABFRL', 'ADANIPOWER', 'ADVENZYMES', 
-    'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'AMARAJABAT', 
+    'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'ARE&M', 
     'ANANTRAJ', 'APCOTEXIND', 'APLAPOLLO', 'ARCHIDPLY', 'ASHOKA',
     'ASIANHOTNR', 'ASTERDM', 'AUROPHARMA', 'AXISBANK', 'BALAJIAMINES', 
     'BALAMINES', 'BALRAMCHIN', 'BANCOINDIA', 'BASF', 'BATAINDIA',
@@ -76,10 +76,10 @@ shares = [
     'SHRIRAMEPC', 'SHYAMMETL', 'SIEMENS', 'SIS', 'SJS',
     'SKFINDIA', 'SOBHA', 'SOLARA', 'SONACOMS', 'SOUTHBANK',
     'SPAL', 'SPARC', 'SRHHYPOLTD', 'SRTRANSFIN', 'STAR',
-    'STCINDIA', 'STLTECH', 'SUBEX', 'SUDARSCHEM', 'SUNDRMFAST',
+    'STCINDIA', 'STLTECH', 'SUBEXLTD', 'SUDARSCHEM', 'SUNDRMFAST',
     'SUNPHARMA', 'SUPPETRO', 'SUPRAJIT', 'SUVEN', 'SWARAJENG',
     'SYMPHONY', 'TANLA', 'TATAINVEST', 'TATACOFFEE', 'TATAMETALI',
-    'TATAPOWER', 'TATASTLBSL', 'TCS', 'TECHM', 'TEGA',
+    'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TEGA',
     'THEINVEST', 'THERMAX', 'TIMKEN', 'TITAN', 'TORNTPOWER',
     'TRENT', 'TRITURBINE', 'TTKPRESTIG', 'TV18BRDCST', 'TVSMOTOR',
     'UCOBANK', 'ULTRACEMCO', 'UNIONBANK', 'UNOMINDA', 'UPL',
@@ -185,6 +185,9 @@ def get_last_trading_day():
     
     return day
 
+# Dictionary to store stocks with their percentage and volume change
+high_growth_stocks = {}
+
 # Function to fetch OHLC data for a specific date range
 def fetch_ohlc(ticker, interval, start_date, end_date):
     """Extracts historical OHLC data for a specific date range and returns it as a DataFrame."""
@@ -202,9 +205,6 @@ def fetch_ohlc(ticker, interval, start_date, end_date):
                 interval
             )
         )
-
-        # Print full response for debugging
-        logging.info(f"Raw API response for {ticker}: {kite.historical_data(instrument, start_date, end_date, interval)}")
 
         if not data.empty:
             logging.info(f"Fetched data columns for {ticker}: {data.columns}")
@@ -229,24 +229,22 @@ def fetch_live_price(symbol):
         logging.error(f"Error fetching live price for {symbol}: {e}")
         return None
 
-# Global dictionary to store stocks and their percentage changes
-high_growth_stocks = {}
-
-# Modify the print_price_comparison function to store percentage change
+# Modify the print_price_comparison function to include volume change
 def print_price_comparison(symbol):
     """Prints last market day closing price, current price, and percentage change."""    
     # Find the last trading day
     last_trading_day = get_last_trading_day()
     
-    # Set date range (last trading day to today)
+    # Set date range for the last trading day and last 15 minutes
     start_date = last_trading_day
     end_date = last_trading_day
-    
+
     logging.info(f"Fetching data for {symbol} on last trading day: {last_trading_day}")
     
     # Fetch OHLC data for last trading day and today's live price
     ohlc_data = fetch_ohlc(symbol, "day", start_date, end_date)
-    
+    volume_data_15m = fetch_ohlc(symbol, "15minute", last_trading_day, last_trading_day)  # Fetch last 15-minute volume
+
     if ohlc_data is not None and not ohlc_data.empty:
         if 'close' in ohlc_data.columns:
             last_close = ohlc_data['close'].iloc[-1]
@@ -255,18 +253,29 @@ def print_price_comparison(symbol):
             if live_price is not None:
                 percent_change = ((live_price - last_close) / last_close) * 100
                 
-                logging.info(f"{symbol}:")
-                logging.info(f"Last Trading Day Close: {last_close}")
-                logging.info(f"Current Price: {live_price}")
-                logging.info(f"Percentage Change: {percent_change:.2f}%")
+                logging.info(f"{symbol}: Last Trading Day Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}%")
                 
                 # Check if the percentage change is 2% or more
                 if percent_change >= 2:
                     logging.info(f"{symbol} has increased by {percent_change:.2f}%, which is above 2%.")
-                    high_growth_stocks[symbol] = percent_change  # Store percentage change
-                    print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}% (Above 2% growth)")
+                    # Volume change logic
+                    if volume_data_15m is not None and not volume_data_15m.empty:
+                        last_volume = volume_data_15m['volume'].iloc[-1]  # Volume for last 15 minutes
+                        last_day_volume = ohlc_data['volume'].iloc[-1]  # Volume for last trading day
+
+                        volume_change = ((last_volume - last_day_volume) / last_day_volume) * 100 if last_day_volume > 0 else float('inf')
+                        logging.info(f"Volume Change for {symbol}: {volume_change:.2f}%")
+                        
+                        # Print the output in a formatted way
+                        print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, "
+                              f"Percentage Change: {percent_change:.2f}%, Volume Change: {volume_change:.2f}%")
+                        high_growth_stocks[symbol] = (percent_change, volume_change)  # Store as a tuple
+                    else:
+                        print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, "
+                              f"Percentage Change: {percent_change:.2f}%, Volume Change: Data not available")
                 else:
-                    print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}%")
+                    print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, "
+                          f"Percentage Change: {percent_change:.2f}%, Volume Change: Data not available")
             else:
                 logging.error(f"Could not fetch live price for {symbol}")
         else:
@@ -274,17 +283,13 @@ def print_price_comparison(symbol):
     else:
         logging.error(f"Could not fetch historical data for {symbol}")
 
-# Modified function to print all stocks with 2% or more change in descending order
+# Modified function to print the high growth stocks
 def print_high_growth_stocks():
-    """Prints all stocks with a percentage change of 2% or more in descending order."""
+    """Prints the stocks with a growth of 2% or more along with volume change."""
+    logging.info("Stocks with 2% or more increase:")
     if high_growth_stocks:
-        # Sort stocks by percentage change in descending order
-        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda item: item[1], reverse=True)
-        
-        logging.info("Stocks with 2% or more increase:")
-        print("Stocks with 2% or more increase:")
-        for stock, percent in sorted_stocks:
-            print(f"{stock}: {percent:.2f}%")
+        for stock, (percent, volume_change) in high_growth_stocks.items():
+            print(f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%")
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
@@ -294,40 +299,31 @@ def save_high_growth_stocks_to_csv():
     """Saves stocks with a percentage change of 2% or more to a CSV file."""
     if high_growth_stocks:
         # Sort stocks by percentage change in descending order
-        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda item: item[1], reverse=True)
-        
-        logging.info("Saving stocks with 2% or more increase to CSV...")
-        
-        # Define the CSV file path
-        csv_file = "high_growth_stocks.csv"
-        
-        # Open the file for writing
-        with open(csv_file, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Stock Symbol", "Percentage Change (%)"])  # CSV header
-            
-            # Write the sorted stocks to the CSV file
-            for stock, percent in sorted_stocks:
-                writer.writerow([stock, f"{percent:.2f}"])
-                
-        logging.info(f"Saved stocks with 2% or more increase to {csv_file}.")
-        print(f"Saved stocks with 2% or more increase to {csv_file}.")
+        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+        with open("high_growth_stocks.csv", 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['Stock', 'Percentage Change (%)', 'Volume Change (%)'])
+            for stock, (percent_change, volume_change) in sorted_stocks:
+                writer.writerow([stock, percent_change, volume_change])
+        logging.info("High growth stocks saved to high_growth_stocks.csv.")
     else:
-        logging.info("No stocks have increased by 2% or more to save.")
-        print("No stocks have increased by 2% or more to save.")
+        logging.info("No stocks to save.")
 
-# Modify run_task to save the data after printing
-def run_task():
-    """Function to run the stock comparison every 5 minutes."""
-    for stock in shares:
-        print_price_comparison(stock)
+# Main function to run every 5 minutes
+def job():
+    """Job to run every 5 minutes."""
+    logging.info("Job started.")
+    for share in shares:
+        print_price_comparison(share)
     print_high_growth_stocks()
     save_high_growth_stocks_to_csv()
 
-# Schedule the task to run every 5 minutes
-schedule.every(5).minutes.do(run_task)
+# Schedule the job to run every 5 minutes
+schedule.every(5).minutes.do(job)
 
-# Keep the script running
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# Start the scheduler
+if __name__ == "__main__":
+    logging.info("Scheduler started.")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
