@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Zerodha kiteconnect automated authentication
+Zerodha kiteconnect automated authentication with a task running every 5 minutes
 """
 
+import schedule
+import time
 from kiteconnect import KiteConnect
 import logging
 import os
 import datetime as dt
 import pandas as pd
+import csv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -18,11 +21,105 @@ os.chdir(cwd)
 
 # Stocks
 shares = [
-    'XYZ', 'ABC'
+    'AARTIDRUGS', 'AARTISURF', 'ABFRL', 'ADANIPOWER', 'ADVENZYMES', 
+    'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'AMARAJABAT', 
+    'ANANTRAJ', 'APCOTEXIND', 'APLAPOLLO', 'ARCHIDPLY', 'ASHOKA',
+    'ASIANHOTNR', 'ASTERDM', 'AUROPHARMA', 'AXISBANK', 'BALAJIAMINES', 
+    'BALAMINES', 'BALRAMCHIN', 'BANCOINDIA', 'BASF', 'BATAINDIA',
+    'BAYERCROP', 'BCG', 'BDL', 'BEL', 'BEML',
+    'BERGEPAINT', 'BFUTILITIE', 'BGRENERGY', 'BHAGERIA', 'BHARATGEAR',
+    'BIRLAMONEY', 'BLUESTARCO', 'BOROSIL', 'BRIGADE', 'BSOFT',
+    'CAPLIPOINT', 'CARYSIL', 'CEATLTD', 'CENTUM', 'CHALET',
+    'CHEMCON', 'CHEMFAB', 'CHEMPLASTS', 'CHOLAHLDNG', 'CIMMCO',
+    'COCHINSHIP', 'COFORGE', 'COSMOFILMS', 'CROMPTON', 'CSBBANK',
+    'CYIENT', 'DAAWAT', 'DCAL', 'DEEPAKFERT', 'DELTACORP',
+    'DENORA', 'DISHTV', 'DOLLAR', 'DPSCLTD', 'DREDGECORP',
+    'DYNPRO', 'ECLERX', 'EDELWEISS', 'EIDPARRY', 'EIHOTEL',
+    'ELGIEQUIP', 'EMAMILTD', 'EMIL', 'ENDURANCE', 'ENGINERSIN',
+    'ERIS', 'ESABINDIA', 'FCONSUMER', 'FEDERALBNK', 'FIEMIND',
+    'FINPIPE', 'FLUOROCHEM', 'GABRIEL', 'GAIL', 'GALAXYSURF',
+    'GARFIBRES', 'GDL', 'GEPOWER', 'GHCL', 'GICHSGFIN',
+    'GILLETTE', 'GIPCL', 'GLS', 'GNA', 'GNFC',
+    'GODFRYPHLP', 'GOODYEAR', 'GRAUWEIL', 'GRINDWELL', 'GSKCONS',
+    'GTPL', 'GUFICBIO', 'GULFOILLUB', 'HAPPSTMNDS', 'HARRMALAYA',
+    'HATSUN', 'HERCULES', 'HERITGFOOD', 'HFCL', 'HIKAL',
+    'HINDCOPPER', 'HINDZINC', 'HMVL', 'HOEC', 'HONAUT',
+    'HSIL', 'ICIL', 'ICRA', 'IDBI', 'IDFC',
+    'IFBIND', 'IIFL', 'IL&FSENGG', 'IMFA', 'INDIANB',
+    'INDIANCARD', 'INDIGO', 'INDORAMA', 'INDOSTAR', 'INEOSSTYRO',
+    'INFIBEAM', 'INTELLECT', 'IRB', 'IRCON', 'ISEC',
+    'ITI', 'J&KBANK', 'JAICORPLTD', 'JAMNAAUTO', 'JASH',
+    'JBCHEPHARM', 'JETAIRWAYS', 'JINDALPHOT', 'JISLJALEQS', 'JKCEMENT',
+    'JKLAKSHMI', 'JKPAPER', 'JMFINANCIL', 'JSL', 'JTEKTINDIA',
+    'JUBLFOOD', 'JUBLINDS', 'KABRAEXTRU', 'KAJARIACER', 'KALPATPOWR',
+    'KANSAINER', 'KARDA', 'KEI', 'KIRLOSENG', 'KITEX',
+    'KNRCON', 'KOKUYOCMLN', 'KOLTEPATIL', 'KOPRAN', 'KRBL',
+    'KSB', 'L&TFH', 'LAOPALA', 'LEMONTREE', 'LINDEINDIA',
+    'LUXIND', 'M&MFIN', 'MAHABANK', 'MAHINDCIE', 'MAHSCOOTER',
+    'MAITHANALL', 'MANAKSIA', 'MARKSANS', 'MASTEK', 'MAYURUNIQ',
+    'MAZDOCK', 'MBAPL', 'MCDOWELL-N', 'MINDACORP', 'MINDAIND',
+    'MOLDTEK', 'MONTECARLO', 'MOREPENLAB', 'MOTILALOFS', 'MPHASIS',
+    'MRPL', 'MSTC', 'MTARTECH', 'MUKANDLTD', 'MUNJALSHOW',
+    'NATCOPHARM', 'NATIONALUM', 'NBCC', 'NCC', 'NDL',
+    'NELCO', 'NESCO', 'NESTLEIND', 'NLCINDIA', 'NMDC',
+    'NOCIL', 'NRAIL', 'NTPC', 'NUCLEUS', 'OBEROIRLTY',
+    'OIL', 'OLECTRA', 'OMAXE', 'ONGC', 'ORIENTCEM',
+    'ORIENTELEC', 'ORTINLAB', 'PAGEIND', 'PANAMAPET', 'PARAGMILK',
+    'PCJEWELLER', 'PDSL', 'PEL', 'PERSISTENT', 'PETRONET',
+    'PFIZER', 'PHILIPCARB', 'PILANIINVS', 'PNBHOUSING', 'POLYCAB',
+    'POWERINDIA', 'PRAJIND', 'PRECOT', 'PRSMJOHNSN', 'PTC',
+    'RAILTEL', 'RAIN', 'RALLIS', 'RANEHOLDIN', 'RATNAMANI',
+    'RAYMOND', 'RECLTD', 'RELAXO', 'RELINFRA', 'RENUKA',
+    'RHFL', 'RITES', 'ROSSARI', 'RTNPOWER', 'RUCHI',
+    'RVNL', 'SAGCEM', 'SANOFI', 'SARDAEN', 'SBICARD',
+    'SCI', 'SEQUENT', 'SHILPAMED', 'SHOPERSTOP', 'SHREDIGCEM',
+    'SHRIRAMEPC', 'SHYAMMETL', 'SIEMENS', 'SIS', 'SJS',
+    'SKFINDIA', 'SOBHA', 'SOLARA', 'SONACOMS', 'SOUTHBANK',
+    'SPAL', 'SPARC', 'SRHHYPOLTD', 'SRTRANSFIN', 'STAR',
+    'STCINDIA', 'STLTECH', 'SUBEX', 'SUDARSCHEM', 'SUNDRMFAST',
+    'SUNPHARMA', 'SUPPETRO', 'SUPRAJIT', 'SUVEN', 'SWARAJENG',
+    'SYMPHONY', 'TANLA', 'TATAINVEST', 'TATACOFFEE', 'TATAMETALI',
+    'TATAPOWER', 'TATASTLBSL', 'TCS', 'TECHM', 'TEGA',
+    'THEINVEST', 'THERMAX', 'TIMKEN', 'TITAN', 'TORNTPOWER',
+    'TRENT', 'TRITURBINE', 'TTKPRESTIG', 'TV18BRDCST', 'TVSMOTOR',
+    'UCOBANK', 'ULTRACEMCO', 'UNIONBANK', 'UNOMINDA', 'UPL',
+    'UJJIVAN', 'VAKRANGEE', 'VARROC', 'VEDL', 'VENKEYS',
+    'VGUARD', 'VIKASMCORP', 'VIPIND', 'VOLTAMP', 'VSTIND',
+    'WABCOINDIA', 'WALCHANNAG', 'WELCORP', 'WELSPUNIND', 'WHIRLPOOL',
+    'WOCKPHARMA', 'YESBANK', 'ZEEL', 'ZENITHSTL', 'ZENTEC',
+    # Nifty 50 stocks list
+    'ADANIPORTS', 'ASIANPAINT', 'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 
+    'BAJAJFINSV', 'BPCL', 'BHARTIARTL', 'BRITANNIA', 'CIPLA', 
+    'COALINDIA', 'DIVISLAB', 'DRREDDY', 'EICHERMOT', 'GRASIM', 
+    'HCLTECH', 'HDFCBANK', 'HDFC', 'HEROMOTOCO', 'HINDALCO', 
+    'HINDUNILVR', 'ICICIBANK', 'ITC', 'INDUSINDBK', 'INFY', 
+    'JSWSTEEL', 'KOTAKBANK', 'LT', 'M&M', 'MARUTI', 
+    'NESTLEIND', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 
+    'SBILIFE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATACONSUM', 
+    'TATAMOTORS', 'TATASTEEL', 'TECHM', 'TITAN', 'ULTRACEMCO', 
+    'UPL', 'WIPRO',
+    # Top 100 midcap stocks
+    'ADANIGREEN', 'ADANIPORTS', 'AJANTPHARM', 'ALKEM', 'AMBUJACEM', 
+    'APOLLOHOSP', 'ASHOKLEY', 'ASTRAL', 'ATUL', 'AVANTIFEED',
+    'BAJFINANCE', 'BAJFAHFL', 'BANKBARODA', 'BEL', 'BHARATFORG',
+    'BHARTIARTL', 'BIRLACORPN', 'ZYDUSLIFE', 'CANFINHOME', 'CEATLTD',
+    'CENTRALBK', 'CIPLA', 'COFORGE', 'COLPAL', 'CONCOR',
+    'CROMPTON', 'DABUR', 'DCMSHRIRAM', 'DEEPAKNTR', 'DIVISLAB',
+    'DIXON', 'DLF', 'EICHERMOT', 'ESCORTS', 'EXIDEIND',
+    'GAIL', 'GLAND', 'GLAXO', 'GMRINFRA', 'GRANULES',
+    'HAVELLS', 'HDFCLIFE', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
+    'ICICIBANK', 'IGL', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER',
+    'IRCTC', 'JINDALSTEL', 'JSLHISAR', 'KEC', 'KIRLOSENG',
+    'LTF', 'LT', 'MINDTREE', 'MOTHERSON', 'MUTHOOTFIN',
+    'NIITLTD', 'NOCIL', 'OIL', 'PERSISTENT', 'PIDILITIND',
+    'POLYCAB', 'PVRINOX', 'RAMCOCEM', 'RELIANCE', 'SAIL',
+    'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
+    'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
+    'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
+    'WIPRO', 'ZENSARTECH'
 ]
 
-
-# Known market holidays for 2024 (example, you can update this list)
+# Known market holidays for 2024 (example)
 market_holidays = [
     dt.date(2024, 10, 2),  # Gandhi Jayanti
     # Add other known holidays for the year here
@@ -192,9 +289,45 @@ def print_high_growth_stocks():
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
 
-# Example usage: Fetch last close, live price, and percentage change for shares
-for stock in shares:
-    print_price_comparison(stock)
+# Modified function to save stocks with 2% or more change to a CSV file
+def save_high_growth_stocks_to_csv():
+    """Saves stocks with a percentage change of 2% or more to a CSV file."""
+    if high_growth_stocks:
+        # Sort stocks by percentage change in descending order
+        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda item: item[1], reverse=True)
+        
+        logging.info("Saving stocks with 2% or more increase to CSV...")
+        
+        # Define the CSV file path
+        csv_file = "high_growth_stocks.csv"
+        
+        # Open the file for writing
+        with open(csv_file, mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Stock Symbol", "Percentage Change (%)"])  # CSV header
+            
+            # Write the sorted stocks to the CSV file
+            for stock, percent in sorted_stocks:
+                writer.writerow([stock, f"{percent:.2f}"])
+                
+        logging.info(f"Saved stocks with 2% or more increase to {csv_file}.")
+        print(f"Saved stocks with 2% or more increase to {csv_file}.")
+    else:
+        logging.info("No stocks have increased by 2% or more to save.")
+        print("No stocks have increased by 2% or more to save.")
 
-# Print all stocks with 2% or more change
-print_high_growth_stocks()
+# Modify run_task to save the data after printing
+def run_task():
+    """Function to run the stock comparison every 5 minutes."""
+    for stock in shares:
+        print_price_comparison(stock)
+    print_high_growth_stocks()
+    save_high_growth_stocks_to_csv()
+
+# Schedule the task to run every 5 minutes
+schedule.every(5).minutes.do(run_task)
+
+# Keep the script running
+while True:
+    schedule.run_pending()
+    time.sleep(1)
