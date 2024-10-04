@@ -116,8 +116,7 @@ shares = [
     'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
     'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
     'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
-    'WIPRO', 'ZENSARTECH'
-    
+    'WIPRO', 'ZENSARTECH'   
 ]
 
 # Known market holidays for 2024 (example)
