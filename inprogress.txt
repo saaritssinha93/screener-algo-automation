@@ -3,6 +3,7 @@ stocks fetch
 etf fetch
 basic equity strategies - intraday, positional, swing, longterm
 etf strategies
+move to cloud
 yfinance data fetch
 technical indicators
 nfo strategies
