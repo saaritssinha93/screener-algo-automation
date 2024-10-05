@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # =============================================================================
 # Import OHLCV data and calculate RSI technical indicators
 # Author : Mayank Rasu (http://rasuquant.com/wp/)
@@ -34,4 +35,3 @@ def RSI(DF, n=14):
 
 for ticker in ohlcv_data:
     ohlcv_data[ticker]["RSI"] = RSI(ohlcv_data[ticker])
-    
