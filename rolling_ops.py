@@ -1,15 +1,15 @@
+# -*- coding: utf-8 -*-
 # =============================================================================
-# Import OHLCV data and perform rolling operations
-# Author : Mayank Rasu (http://rasuquant.com/wp/)
+# Import OHLCV data and perform basic data operations
+# Author : Saarit
 
-# Please report bug/issues in the Q&A section
 # =============================================================================
 
 import datetime as dt
 import yfinance as yf
 import pandas as pd
 
-tickers = ["AMZN","MSFT","FB","GOOG"]
+tickers = ["AMZN","MSFT","META","GOOG"]
 start = dt.datetime.today()-dt.timedelta(3650)
 end = dt.datetime.today()
 cl_price = pd.DataFrame() # empty dataframe which will be filled with closing prices of each stock
@@ -33,5 +33,5 @@ daily_return.rolling(window=10).max()
 daily_return.rolling(window=10).sum()
 
 # Rolling operations (exponentialy weighted)
-daily_return.ewm(com=10, min_periods=10).mean()
+df = daily_return.ewm(com=10, min_periods=10).mean()
 daily_return.ewm(com=10, min_periods=10).std()
