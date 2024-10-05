@@ -30,14 +30,3 @@ def Boll_Band(DF, n=14):
 
 for ticker in ohlcv_data:
     ohlcv_data[ticker][["MB","UB","LB","BB_Width"]] = Boll_Band(ohlcv_data[ticker])
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
