@@ -1,15 +1,15 @@
+# -*- coding: utf-8 -*-
 # =============================================================================
 # Import OHLCV data and perform basic data operations
-# Author : Mayank Rasu (http://rasuquant.com/wp/)
+# Author : Saarit
 
-# Please report bug/issues in the Q&A section
 # =============================================================================
 
 import datetime as dt
 import yfinance as yf
 import pandas as pd
 
-tickers = ["AMZN","MSFT","FB","GOOG"]
+tickers = ["AMZN","MSFT","META","GOOG"]
 start = dt.datetime.today()-dt.timedelta(3650)
 end = dt.datetime.today()
 cl_price = pd.DataFrame() # empty dataframe which will be filled with closing prices of each stock
@@ -35,15 +35,7 @@ cl_price.std() #calculates standard deviation of stock price for each stock
 daily_return = cl_price.pct_change() #Creates dataframe with daily return for each stock
 daily_return = cl_price/cl_price.shift(1) - 1 #Performs same operation as above
 
+daily_return.mean()
 daily_return.mean(axis=1) #prints mean daily return for each stock
 daily_return.std() #prints standard deviation of daily returns for each stock
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
