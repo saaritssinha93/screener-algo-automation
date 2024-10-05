@@ -1,6 +1,7 @@
+    # -*- coding: utf-8 -*-
 # =============================================================================
-# Import OHLCV data and calculate ATR technical indicator
-# Author : Mayank Rasu (http://rasuquant.com/wp/)
+# Import OHLCV data and calculate ATR technical indicator - volatility based
+# Author : Saarit
 
 # Please report bug/issues in the Q&A section
 # =============================================================================
