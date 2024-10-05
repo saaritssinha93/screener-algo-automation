@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 # =============================================================================
 # Import OHLCV data and calculate Bollinger Band technical indicator
-# Author : Mayank Rasu (http://rasuquant.com/wp/)
+# Author : Saarit
 
 # Please report bug/issues in the Q&A section
 # =============================================================================
@@ -29,3 +30,14 @@ def Boll_Band(DF, n=14):
 
 for ticker in ohlcv_data:
     ohlcv_data[ticker][["MB","UB","LB","BB_Width"]] = Boll_Band(ohlcv_data[ticker])
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
