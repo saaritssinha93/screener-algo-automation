@@ -1,6 +1,7 @@
+    # -*- coding: utf-8 -*-
 # =============================================================================
 # Import OHLCV data and calculate MACD technical indicator
-# Author : Mayank Rasu (http://rasuquant.com/wp/)
+# Author : Saarit
 
 # Please report bug/issues in the Q&A section
 # =============================================================================
