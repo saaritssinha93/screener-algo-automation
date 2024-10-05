@@ -2,7 +2,7 @@
 """
 Getting data for multiple stocks using yfinance library
 
-@author: Mayank Rasu (http://rasuquant.com/wp/)
+@author: Saarit
 """
 
 import datetime as dt
