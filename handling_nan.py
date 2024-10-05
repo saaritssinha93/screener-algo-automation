@@ -1,25 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-handling NaN values
-
-@author: Mayank Rasu (http://rasuquant.com/wp/)
+Handling NaN values
+@author: Saarit
 """
 
 import datetime as dt
 import yfinance as yf
 import pandas as pd
 
-stocks = ["AMZN","MSFT","FB","GOOG"]
-start = dt.datetime.today()-dt.timedelta(3650)
+# Replace 'FB' with 'META'
+stocks = ["AMZN", "MSFT", "META", "GOOG"]
+start = dt.datetime.today() - dt.timedelta(4745)
 end = dt.datetime.today()
-cl_price = pd.DataFrame() # empty dataframe which will be filled with closing prices of each stock
+cl_price = pd.DataFrame()  # Empty dataframe to hold closing prices
 
-# looping over tickers and creating a dataframe with close prices
+# Looping over tickers and creating a dataframe with close prices
 for ticker in stocks:
-    cl_price[ticker] = yf.download(ticker,start,end)["Adj Close"]
-    
-# filling NaN values
-cl_price.fillna(method='bfill',axis=0,inplace=True)
+    cl_price[ticker] = yf.download(ticker, start, end)["Adj Close"]
 
-#dropping NaN values
-cl_price.dropna(axis=0,how='any')
+# Filling NaN values with backward fill
+cl_price.bfill(axis=0, inplace=True)
+
+# Check the resulting dataframe
+print(cl_price.head())
+
+
+# Dropping rows with NaN values
+cl_price.dropna(axis=0, how='any', inplace=True)
+
+# Check the resulting dataframe
+print(cl_price.head())
