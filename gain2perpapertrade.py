@@ -321,7 +321,7 @@ def select_top_growth_stocks(growth_stocks, n=3):
     return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
 # Function to simulate paper trading
-def paper_trade(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
+def paper_trade(stocks, investment_per_stock=50000, target=0.005, stop_loss=0.01):
     """Simulates paper trading on selected stocks."""
     results = []
     
@@ -390,7 +390,6 @@ def select_top_growth_stocks(growth_stocks, n=3):
     top_stocks = sorted_stocks[:n]
     return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
-
 # Function to monitor stocks and execute sell as per target or stop-loss
 def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
     """Monitors stocks and executes sell based on target or stop-loss."""
@@ -412,6 +411,9 @@ def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0
             'status': 'Holding'
         }
 
+    total_invested = sum(info['investment'] for info in trade_info.values())
+    net_total = total_invested  # Initialize net total with total invested
+
     while trade_info:  # Continue while there are stocks being monitored
         for symbol in list(trade_info.keys()):  # Use list to avoid modifying dict during iteration
             current_price = fetch_live_price(symbol)
@@ -421,15 +423,21 @@ def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0
             
             # Check for target hit or stop loss hit
             if current_price >= trade_info[symbol]['target_price']:
+                profit = trade_info[symbol]['shares_bought'] * (current_price - trade_info[symbol]['buy_price'])
+                net_total += profit
                 print(f"target hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
                 print(f"target hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
                       f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
                 del trade_info[symbol]  # Remove the stock from monitoring
             
             elif current_price <= trade_info[symbol]['stop_loss_price']:
-                print(f"stop loss hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
-                print(f"stop loss hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                loss = trade_info[symbol]['shares_bought'] * (trade_info[symbol]['buy_price'] - current_price)
+                net_total -= loss
+                print(f"SL hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"SL hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
                       f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
                 del trade_info[symbol]  # Remove the stock from monitoring
         
         time.sleep(1)  # Sleep for a second before checking again
