@@ -283,19 +283,139 @@ def print_high_growth_stocks():
         print("No stocks have increased by 2% or more.")
 
 
-# Fetch data for the selected stocks
+# Function to select the top 3 high growth stocks based on percentage change
+def select_top_growth_stocks(growth_stocks, n=3):
+    """Selects top N high growth stocks based on percentage change."""
+    sorted_stocks = sorted(growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+    top_stocks = sorted_stocks[:n]
+    return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
-# Call your functions manually instead of using a scheduler
-# Fetch data for the selected stocks
+# Function to fetch the live price of a stock
+def fetch_live_price(symbol):
+    """Fetches the live price of the given stock symbol."""
+    try:
+        # Assume we have a method in the KiteConnect instance to fetch live price
+        live_price_data = kite.ltp(f"NSE:{symbol}")
+        return live_price_data[f"NSE:{symbol}"]['last_price']
+    except Exception as e:
+        logging.error(f"Error fetching live price for {symbol}: {e}")
+        return None
+
+# Function to simulate paper trading
+def paper_trade(stocks, investment_per_stock=50000, target=0.005, stop_loss=0.01):
+    """Simulates paper trading on selected stocks."""
+    results = []
+    
+    for symbol in stocks:
+        live_price = fetch_live_price(symbol)
+        
+        if live_price is None:
+            logging.error(f"Could not fetch live price for {symbol}, skipping paper trade.")
+            continue
+        
+        # Calculate the number of shares to buy
+        shares_to_buy = investment_per_stock // live_price
+        investment = shares_to_buy * live_price
+        target_price = live_price * (1 + target)
+        stop_loss_price = live_price * (1 - stop_loss)
+
+        # Initialize variables for trailing stop loss
+        highest_price = live_price
+        trailing_stop_loss_price = stop_loss_price
+
+        # Simulate the price movements (for example, over a trading session)
+        price_movements = np.random.normal(0, 0.5, 100)  # Simulate some price movements
+        
+        for movement in price_movements:
+            current_price = live_price + movement
+            
+            # Update trailing stop loss if current price exceeds highest price
+            if current_price > highest_price:
+                highest_price = current_price
+                trailing_stop_loss_price = highest_price * (1 - stop_loss)
+            
+            # Check for target hit or stop loss hit
+            if current_price >= target_price:
+                results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "Target Hit"))
+                break
+            elif current_price <= trailing_stop_loss_price:
+                results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "Stop Loss Hit"))
+                break
+        else:
+            results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "No Action"))
+
+    return pd.DataFrame(results, columns=["Stock", "Investment", "Buy Price", "Shares Bought", "Target", "Stop Loss", "Status"])
+
+# Function to monitor stocks and execute sell as per target or stop-loss
+# Function to monitor stocks and execute sell as per target or stop-loss
+def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
+    """Monitors stocks and executes sell based on target or stop-loss."""
+    trade_info = {}
+    
+    # Initialize trades
+    for symbol in stocks:
+        live_price = fetch_live_price(symbol)
+        shares_to_buy = investment_per_stock // live_price
+        target_price = live_price * (1 + target)
+        stop_loss_price = live_price * (1 - stop_loss)
+        
+        trade_info[symbol] = {
+            'investment': investment_per_stock,
+            'buy_price': live_price,
+            'shares_bought': shares_to_buy,
+            'target_price': target_price,
+            'stop_loss_price': stop_loss_price,
+            'status': 'Holding'
+        }
+
+    total_invested = sum(info['investment'] for info in trade_info.values())
+    net_total = total_invested  # Initialize net total with total invested
+
+    while trade_info:  # Continue while there are stocks being monitored
+        for symbol in list(trade_info.keys()):  # Use list to avoid modifying dict during iteration
+            current_price = fetch_live_price(symbol)
+            
+            # Print live price and trade status
+            print(f"Monitoring {symbol}: Live Price = {current_price:.2f}, Status = {trade_info[symbol]['status']}")
+            
+            # Check for target hit or stop loss hit
+            if current_price >= trade_info[symbol]['target_price']:
+                profit = trade_info[symbol]['shares_bought'] * (current_price - trade_info[symbol]['buy_price'])
+                net_total += profit
+                print(f"Target hit! Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"Target hit! Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                      f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
+                del trade_info[symbol]  # Remove the stock from monitoring
+            
+            elif current_price <= trade_info[symbol]['stop_loss_price']:
+                loss = trade_info[symbol]['shares_bought'] * (trade_info[symbol]['buy_price'] - current_price)
+                net_total -= loss
+                print(f"Stop Loss hit! Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"Stop Loss hit! Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                      f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
+                del trade_info[symbol]  # Remove the stock from monitoring
+        
+        time.sleep(1)  # Sleep for a second before checking again
+
+# Fetch data for all shares
 for share in shares:
-    fetch_today_data(share)  # Ensure 'fetch_today_data' is defined
-    print_price_comparison(share)
+    fetch_today_data(share)
+    print_price_comparison(share)  # Only the symbol is passed
+  # Compare at 9:45 AM
 
-print_high_growth_stocks()  # Final summary of stocks with growth
+# Get top 3 high growth stocks based on 9:45 AM data
+top_stocks = select_top_growth_stocks(high_growth_stocks)
+
+# Perform paper trading on top stocks
+trade_results = paper_trade(top_stocks)
+
+# Print the results
+print(trade_results)
+
+# Monitor the stocks and execute sell based on target or stop-loss
+monitor_stocks(top_stocks)
 
 
-
-# Display or save the combined DataFrame as needed
-print(df_all_shares.head())  # Show first few rows of the combined DataFrame
-df_all_shares.to_csv("today_5min_data.csv", index=False)  # Save to CSV
 
