@@ -1,8 +1,122 @@
+# -*- coding: utf-8 -*-
+"""
+Zerodha kiteconnect automated authentication without a scheduler.
+"""
 
+import time
+from kiteconnect import KiteConnect
+import logging
+import os
+import datetime as dt
+import pandas as pd
+import numpy as np
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
+# Define the correct path
+cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
+os.chdir(cwd)
 
-
+# Stocks
+shares = [
+    'AARTIDRUGS', 'AARTISURF', 'ABFRL', 'ADANIPOWER', 'ADVENZYMES', 
+    'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'ARE&M', 
+    'ANANTRAJ', 'APCOTEXIND', 'APLAPOLLO', 'ARCHIDPLY', 'ASHOKA',
+    'ASIANHOTNR', 'ASTERDM', 'AUROPHARMA', 'AXISBANK', 'BALAJIAMINES', 
+    'BALAMINES', 'BALRAMCHIN', 'BANCOINDIA', 'BASF', 'BATAINDIA',
+    'BAYERCROP', 'BCG', 'BDL', 'BEL', 'BEML',
+    'BERGEPAINT', 'BFUTILITIE', 'BGRENERGY', 'BHAGERIA', 'BHARATGEAR',
+    'BIRLAMONEY', 'BLUESTARCO', 'BOROSIL', 'BRIGADE', 'BSOFT',
+    'CAPLIPOINT', 'CARYSIL', 'CEATLTD', 'CENTUM', 'CHALET',
+    'CHEMCON', 'CHEMFAB', 'CHEMPLASTS', 'CHOLAHLDNG', 'CIMMCO',
+    'COCHINSHIP', 'COFORGE', 'COSMOFILMS', 'CROMPTON', 'CSBBANK',
+    'CYIENT', 'DAAWAT', 'DCAL', 'DEEPAKFERT', 'DELTACORP',
+    'DENORA', 'DISHTV', 'DOLLAR', 'DPSCLTD', 'DREDGECORP',
+    'DYNPRO', 'ECLERX', 'EDELWEISS', 'EIDPARRY', 'EIHOTEL',
+    'ELGIEQUIP', 'EMAMILTD', 'EMIL', 'ENDURANCE', 'ENGINERSIN',
+    'ERIS', 'ESABINDIA', 'FCONSUMER', 'FEDERALBNK', 'FIEMIND',
+    'FINPIPE', 'FLUOROCHEM', 'GABRIEL', 'GAIL', 'GALAXYSURF',
+    'GARFIBRES', 'GDL', 'GEPOWER', 'GHCL', 'GICHSGFIN',
+    'GILLETTE', 'GIPCL', 'GLS', 'GNA', 'GNFC',
+    'GODFRYPHLP', 'GOODYEAR', 'GRAUWEIL', 'GRINDWELL', 'GSKCONS',
+    'GTPL', 'GUFICBIO', 'GULFOILLUB', 'HAPPSTMNDS', 'HARRMALAYA',
+    'HATSUN', 'HERCULES', 'HERITGFOOD', 'HFCL', 'HIKAL',
+    'HINDCOPPER', 'HINDZINC', 'HMVL', 'HOEC', 'HONAUT',
+    'HSIL', 'ICIL', 'ICRA', 'IDBI', 'IDFC',
+    'IFBIND', 'IIFL', 'IL&FSENGG', 'IMFA', 'INDIANB',
+    'INDIANCARD', 'INDIGO', 'INDORAMA', 'INDOSTAR', 'INEOSSTYRO',
+    'INFIBEAM', 'INTELLECT', 'IRB', 'IRCON', 'ISEC',
+    'ITI', 'J&KBANK', 'JAICORPLTD', 'JAMNAAUTO', 'JASH',
+    'JBCHEPHARM', 'JETAIRWAYS', 'JINDALPHOT', 'JISLJALEQS', 'JKCEMENT',
+    'JKLAKSHMI', 'JKPAPER', 'JMFINANCIL', 'JSL', 'JTEKTINDIA',
+    'JUBLFOOD', 'JUBLINDS', 'KABRAEXTRU', 'KAJARIACER', 'KALPATPOWR',
+    'KANSAINER', 'KARDA', 'KEI', 'KIRLOSENG', 'KITEX',
+    'KNRCON', 'KOKUYOCMLN', 'KOLTEPATIL', 'KOPRAN', 'KRBL',
+    'KSB', 'L&TFH', 'LAOPALA', 'LEMONTREE', 'LINDEINDIA',
+    'LUXIND', 'M&MFIN', 'MAHABANK', 'MAHINDCIE', 'MAHSCOOTER',
+    'MAITHANALL', 'MANAKSIA', 'MARKSANS', 'MASTEK', 'MAYURUNIQ',
+    'MAZDOCK', 'MBAPL', 'MCDOWELL-N', 'MINDACORP', 'MINDAIND',
+    'MOLDTEK', 'MONTECARLO', 'MOREPENLAB', 'MOTILALOFS', 'MPHASIS',
+    'MRPL', 'MSTC', 'MTARTECH', 'MUKANDLTD', 'MUNJALSHOW',
+    'NATCOPHARM', 'NATIONALUM', 'NBCC', 'NCC', 'NDL',
+    'NELCO', 'NESCO', 'NESTLEIND', 'NLCINDIA', 'NMDC',
+    'NOCIL', 'NRAIL', 'NTPC', 'NUCLEUS', 'OBEROIRLTY',
+    'OIL', 'OLECTRA', 'OMAXE', 'ONGC', 'ORIENTCEM',
+    'ORIENTELEC', 'ORTINLAB', 'PAGEIND', 'PANAMAPET', 'PARAGMILK',
+    'PCJEWELLER', 'PDSL', 'PEL', 'PERSISTENT', 'PETRONET',
+    'PFIZER', 'PHILIPCARB', 'PILANIINVS', 'PNBHOUSING', 'POLYCAB',
+    'POWERINDIA', 'PRAJIND', 'PRECOT', 'PRSMJOHNSN', 'PTC',
+    'RAILTEL', 'RAIN', 'RALLIS', 'RANEHOLDIN', 'RATNAMANI',
+    'RAYMOND', 'RECLTD', 'RELAXO', 'RELINFRA', 'RENUKA',
+    'RHFL', 'RITES', 'ROSSARI', 'RTNPOWER', 'RUCHI',
+    'RVNL', 'SAGCEM', 'SANOFI', 'SARDAEN', 'SBICARD',
+    'SCI', 'SEQUENT', 'SHILPAMED', 'SHOPERSTOP', 'SHREDIGCEM',
+    'SHRIRAMEPC', 'SHYAMMETL', 'SIEMENS', 'SIS', 'SJS',
+    'SKFINDIA', 'SOBHA', 'SOLARA', 'SONACOMS', 'SOUTHBANK',
+    'SPAL', 'SPARC', 'SRHHYPOLTD', 'SRTRANSFIN', 'STAR',
+    'STCINDIA', 'STLTECH', 'SUBEXLTD', 'SUDARSCHEM', 'SUNDRMFAST',
+    'SUNPHARMA', 'SUPPETRO', 'SUPRAJIT', 'SUVEN', 'SWARAJENG',
+    'SYMPHONY', 'TANLA', 'TATAINVEST', 'TATACOFFEE', 'TATAMETALI',
+    'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TEGA',
+    'THEINVEST', 'THERMAX', 'TIMKEN', 'TITAN', 'TORNTPOWER',
+    'TRENT', 'TRITURBINE', 'TTKPRESTIG', 'TV18BRDCST', 'TVSMOTOR',
+    'UCOBANK', 'ULTRACEMCO', 'UNIONBANK', 'UNOMINDA', 'UPL',
+    'UJJIVAN', 'VAKRANGEE', 'VARROC', 'VEDL', 'VENKEYS',
+    'VGUARD', 'VIKASMCORP', 'VIPIND', 'VOLTAMP', 'VSTIND',
+    'WABCOINDIA', 'WALCHANNAG', 'WELCORP', 'WELSPUNIND', 'WHIRLPOOL',
+    'WOCKPHARMA', 'YESBANK', 'ZEEL', 'ZENITHSTL', 'ZENTEC',
+    # Nifty 50 stocks list
+    'ADANIPORTS', 'ASIANPAINT', 'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 
+    'BAJAJFINSV', 'BPCL', 'BHARTIARTL', 'BRITANNIA', 'CIPLA', 
+    'COALINDIA', 'DIVISLAB', 'DRREDDY', 'EICHERMOT', 'GRASIM', 
+    'HCLTECH', 'HDFCBANK', 'HDFC', 'HEROMOTOCO', 'HINDALCO', 
+    'HINDUNILVR', 'ICICIBANK', 'ITC', 'INDUSINDBK', 'INFY', 
+    'JSWSTEEL', 'KOTAKBANK', 'LT', 'M&M', 'MARUTI', 
+    'NESTLEIND', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 
+    'SBILIFE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATACONSUM', 
+    'TATAMOTORS', 'TATASTEEL', 'TECHM', 'TITAN', 'ULTRACEMCO', 
+    'UPL', 'WIPRO',
+    # Top 100 midcap stocks
+    'ADANIGREEN', 'ADANIPORTS', 'AJANTPHARM', 'ALKEM', 'AMBUJACEM', 
+    'APOLLOHOSP', 'ASHOKLEY', 'ASTRAL', 'ATUL', 'AVANTIFEED',
+    'BAJFINANCE', 'BAJFAHFL', 'BANKBARODA', 'BEL', 'BHARATFORG',
+    'BHARTIARTL', 'BIRLACORPN', 'ZYDUSLIFE', 'CANFINHOME', 'CEATLTD',
+    'CENTRALBK', 'CIPLA', 'COFORGE', 'COLPAL', 'CONCOR',
+    'CROMPTON', 'DABUR', 'DCMSHRIRAM', 'DEEPAKNTR', 'DIVISLAB',
+    'DIXON', 'DLF', 'EICHERMOT', 'ESCORTS', 'EXIDEIND',
+    'GAIL', 'GLAND', 'GLAXO', 'GMRINFRA', 'GRANULES',
+    'HAVELLS', 'HDFCLIFE', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
+    'ICICIBANK', 'IGL', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER',
+    'IRCTC', 'JINDALSTEL', 'JSLHISAR', 'KEC', 'KIRLOSENG',
+    'LTF', 'LT', 'MINDTREE', 'MOTHERSON', 'MUTHOOTFIN',
+    'NIITLTD', 'NOCIL', 'OIL', 'PERSISTENT', 'PIDILITIND',
+    'POLYCAB', 'PVRINOX', 'RAMCOCEM', 'RELIANCE', 'SAIL',
+    'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
+    'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
+    'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
+    'WIPRO', 'ZENSARTECH'   
+]
 
 # -*- coding: utf-8 -*-
 """
@@ -71,7 +185,7 @@ shares = [
     'ORIENTELEC', 'ORTINLAB', 'PAGEIND', 'PANAMAPET', 'PARAGMILK',
     'PCJEWELLER', 'PDSL', 'PEL', 'PERSISTENT', 'PETRONET',
     'PFIZER', 'PHILIPCARB', 'PILANIINVS', 'PNBHOUSING', 'POLYCAB',
-    'POWERINDIA', 'PRAJIND', 'PRECOT', 'PRSMJOHNSN', 'PTC',
+    'POWERINDIA', 'PRAJIND', 'PRSMJOHNSN', 'PTC',
     'RAILTEL', 'RAIN', 'RALLIS', 'RANEHOLDIN', 'RATNAMANI',
     'RAYMOND', 'RECLTD', 'RELAXO', 'RELINFRA', 'RENUKA',
     'RHFL', 'RITES', 'ROSSARI', 'RTNPOWER', 'RUCHI',
@@ -307,6 +421,7 @@ def print_high_growth_stocks():
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
 
+
 # Call your functions manually instead of using a scheduler
 # Example usage
 for share in shares:
@@ -314,10 +429,6 @@ for share in shares:
 
 print_high_growth_stocks()
 
-
-import numpy as np
-import pandas as pd
-import logging
 
 # Function to select the top 3 high growth stocks based on percentage change
 def select_top_growth_stocks(growth_stocks, n=3):
@@ -327,7 +438,7 @@ def select_top_growth_stocks(growth_stocks, n=3):
     return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
 # Function to simulate paper trading
-def paper_trade(stocks, investment_per_stock=50000, target=0.005, stop_loss=0.01):
+def paper_trade(stocks, investment_per_stock=50000, target=0.02, stop_loss=0.015):
     """Simulates paper trading on selected stocks."""
     results = []
     
@@ -382,13 +493,6 @@ trade_results = paper_trade(top_stocks)
 print(trade_results)
 
 
-
-
-import numpy as np
-import pandas as pd
-import logging
-import time
-
 # Function to select the top 3 high growth stocks based on percentage change
 def select_top_growth_stocks(growth_stocks, n=3):
     """Selects top N high growth stocks based on percentage change."""
@@ -397,13 +501,17 @@ def select_top_growth_stocks(growth_stocks, n=3):
     return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
 # Function to monitor stocks and execute sell as per target or stop-loss
-def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
+def monitor_stocks(stocks, investment_per_stock=50000, target=0.02, stop_loss=0.015):
     """Monitors stocks and executes sell based on target or stop-loss."""
     trade_info = {}
     
     # Initialize trades
     for symbol in stocks:
         live_price = fetch_live_price(symbol)
+        if live_price is None:
+            print(f"Error fetching live price for {symbol}. Skipping...")
+            continue  # Skip this stock if live price couldn't be fetched
+        
         shares_to_buy = investment_per_stock // live_price
         target_price = live_price * (1 + target)
         stop_loss_price = live_price * (1 - stop_loss)
@@ -416,37 +524,48 @@ def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0
             'stop_loss_price': stop_loss_price,
             'status': 'Holding'
         }
-
-    total_invested = sum(info['investment'] for info in trade_info.values())
-    net_total = total_invested  # Initialize net total with total invested
+    
+    # Calculate the total investment as the sum of buy price * shares bought for each stock
+    total_invested = sum(info['buy_price'] * info['shares_bought'] for info in trade_info.values())
+    net_total = 0  # Net total will be the sum of selling price * shares sold
 
     while trade_info:  # Continue while there are stocks being monitored
         for symbol in list(trade_info.keys()):  # Use list to avoid modifying dict during iteration
             current_price = fetch_live_price(symbol)
             
+            if current_price is None:
+                print(f"Error fetching live price for {symbol}. Retrying...")
+                continue  # Skip this iteration if live price couldn't be fetched
+
             # Print live price and trade status
             print(f"Monitoring {symbol}: Live Price = {current_price:.2f}, Status = {trade_info[symbol]['status']}")
             
             # Check for target hit or stop loss hit
             if current_price >= trade_info[symbol]['target_price']:
-                profit = trade_info[symbol]['shares_bought'] * (current_price - trade_info[symbol]['buy_price'])
-                net_total += profit
-                print(f"target hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
-                print(f"target hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                selling_price = current_price
+                shares_sold = trade_info[symbol]['shares_bought']
+                # Calculate net total by adding the selling price * shares sold
+                net_total += selling_price * shares_sold
+                print(f"Target hit! Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"Target hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
                       f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
                 print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
                 del trade_info[symbol]  # Remove the stock from monitoring
             
             elif current_price <= trade_info[symbol]['stop_loss_price']:
-                loss = trade_info[symbol]['shares_bought'] * (trade_info[symbol]['buy_price'] - current_price)
-                net_total -= loss
-                print(f"SL hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                selling_price = current_price
+                shares_sold = trade_info[symbol]['shares_bought']
+                # Calculate net total by adding the selling price * shares sold
+                net_total += selling_price * shares_sold
+                print(f"SL hit! Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
                 print(f"SL hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
                       f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
                 print(f"Total Invested: {total_invested}, Net Total: {net_total:.2f}")
                 del trade_info[symbol]  # Remove the stock from monitoring
         
         time.sleep(1)  # Sleep for a second before checking again
+
+
 
 # Example of how to use the functions
 # Get top 3 high growth stocks
