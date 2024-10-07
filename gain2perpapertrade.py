@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Zerodha kiteconnect automated authentication with a task running every 5 minutes
+Zerodha kiteconnect automated authentication without a scheduler.
 """
 
-import schedule
 import time
 from kiteconnect import KiteConnect
 import logging
 import os
 import datetime as dt
 import pandas as pd
-import csv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -292,7 +290,6 @@ def print_price_comparison(symbol):
     else:
         logging.error(f"Could not fetch historical data for {symbol}")
 
-
 # Modified function to print the high growth stocks
 def print_high_growth_stocks():
     """Prints the stocks with a growth of 2% or more along with volume change."""
@@ -304,180 +301,142 @@ def print_high_growth_stocks():
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
 
-# Modified function to save stocks with 2% or more change to a CSV file
-def save_high_growth_stocks_to_csv():
-    """Saves stocks with a percentage change of 2% or more to a CSV file."""
-    if high_growth_stocks:
-        # Sort stocks by percentage change in descending order
-        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
-        with open("high_growth_stocks.csv", 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(['Stock', 'Percentage Change (%)', 'Volume Change (%)'])
-            for stock, (percent_change, volume_change) in sorted_stocks:
-                writer.writerow([stock, percent_change, volume_change])
-        logging.info("High growth stocks saved to high_growth_stocks.csv.")
-    else:
-        logging.info("No stocks to save.")
+# Call your functions manually instead of using a scheduler
+# Example usage
+for share in shares:
+    print_price_comparison(share)
 
-# Main function to run every 5 minutes
-def job():
-    """Job to run every 5 minutes."""
-    logging.info("Job started.")
-    for share in shares:
-        print_price_comparison(share)
-    print_high_growth_stocks()
-    save_high_growth_stocks_to_csv()
-
-# Schedule the job to run every 5 minutes
-schedule.every(5).minutes.do(job)
-
-# Start the scheduler
-if __name__ == "__main__":
-    logging.info("Scheduler started.")
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-        
-        
+print_high_growth_stocks()
 
 
-
-import time
+import numpy as np
+import pandas as pd
 import logging
-import datetime as dt
-import matplotlib.pyplot as plt
 
-# Dictionary to store the paper trading data (symbol: buy price, sl, target, trailing_sl)
-paper_trades = {}
+# Function to select the top 3 high growth stocks based on percentage change
+def select_top_growth_stocks(growth_stocks, n=3):
+    """Selects top N high growth stocks based on percentage change."""
+    sorted_stocks = sorted(growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+    top_stocks = sorted_stocks[:n]
+    return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
 
-def paper_trade(stock_symbol):
-    """Simulates a paper trade for the given stock with SL, target, and TSL."""
-    try:
-        # Fetch live price (this will be the buy price)
-        buy_price = fetch_live_price(stock_symbol)
-        if buy_price is None:
-            logging.error(f"Error fetching live price for {stock_symbol}. Trade not initiated.")
-            return
-        
-        # Calculate SL, target, and trailing SL
-        sl = buy_price * 0.985  # 1.5% below buy price
-        target = buy_price * 1.03  # 3% above buy price
-        trailing_sl = buy_price * 0.985  # Start with the same as SL initially
-        
-        # Store the trade data along with a list to track prices over time
-        paper_trades[stock_symbol] = {
-            'buy_price': buy_price,
-            'sl': sl,
-            'target': target,
-            'trailing_sl': trailing_sl,
-            'status': 'open',  # Track the trade status
-            'timestamp': dt.datetime.now(),
-            'prices': [(dt.datetime.now(), buy_price)]  # Track price history
-        }
-        
-        logging.info(f"Initiated paper trade for {stock_symbol}. Buy price: {buy_price}, SL: {sl}, Target: {target}, TSL: {trailing_sl}")
-        print(f"Trade for {stock_symbol} initiated: Buy price {buy_price}, SL {sl}, Target {target}, TSL {trailing_sl}")
+# Function to simulate paper trading
+def paper_trade(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
+    """Simulates paper trading on selected stocks."""
+    results = []
     
-    except Exception as e:
-        logging.error(f"Error initiating paper trade for {stock_symbol}: {e}")
-
-def update_paper_trade(stock_symbol):
-    """Updates the trade status by checking if SL, target, or trailing SL is hit."""
-    try:
-        # Fetch the live price of the stock
-        live_price = fetch_live_price(stock_symbol)
+    for symbol in stocks:
+        live_price = fetch_live_price(symbol)
+        
         if live_price is None:
-            logging.error(f"Error fetching live price for {stock_symbol}. Unable to update trade.")
-            return
+            logging.error(f"Could not fetch live price for {symbol}, skipping paper trade.")
+            continue
         
-        trade_data = paper_trades.get(stock_symbol)
-        if not trade_data or trade_data['status'] != 'open':
-            return  # Skip if trade is already closed
+        # Calculate the number of shares to buy
+        shares_to_buy = investment_per_stock // live_price
+        investment = shares_to_buy * live_price
+        target_price = live_price * (1 + target)
+        stop_loss_price = live_price * (1 - stop_loss)
+
+        # Initialize variables for trailing stop loss
+        highest_price = live_price
+        trailing_stop_loss_price = stop_loss_price
+
+        # Simulate the price movements (for example, over a trading session)
+        price_movements = np.random.normal(0, 0.5, 100)  # Simulate some price movements
         
-        # Record the current price
-        trade_data['prices'].append((dt.datetime.now(), live_price))
-        
-        # Check if the target or SL is hit
-        if live_price >= trade_data['target']:
-            trade_data['status'] = 'target_hit'
-            logging.info(f"Target hit for {stock_symbol}. Closing trade at {live_price}")
-            print(f"Target hit for {stock_symbol}. Closing trade at {live_price}")
-            plot_paper_trade(stock_symbol)  # Plot the result once the trade is closed
-        
-        elif live_price <= trade_data['sl']:
-            trade_data['status'] = 'sl_hit'
-            logging.info(f"Stop loss hit for {stock_symbol}. Closing trade at {live_price}")
-            print(f"Stop loss hit for {stock_symbol}. Closing trade at {live_price}")
-            plot_paper_trade(stock_symbol)  # Plot the result once the trade is closed
-        
+        for movement in price_movements:
+            current_price = live_price + movement
+            
+            # Update trailing stop loss if current price exceeds highest price
+            if current_price > highest_price:
+                highest_price = current_price
+                trailing_stop_loss_price = highest_price * (1 - stop_loss)
+            
+            # Check for target hit or stop loss hit
+            if current_price >= target_price:
+                results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "Target Hit"))
+                break
+            elif current_price <= trailing_stop_loss_price:
+                results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "Stop Loss Hit"))
+                break
         else:
-            # Update trailing SL if the stock has moved up and trailing SL needs adjustment
-            if live_price > trade_data['buy_price']:
-                new_trailing_sl = live_price * 0.985  # Update TSL to 1.5% below the highest price so far
-                if new_trailing_sl > trade_data['trailing_sl']:
-                    trade_data['trailing_sl'] = new_trailing_sl
-                    logging.info(f"Trailing SL updated for {stock_symbol}. New TSL: {new_trailing_sl}")
-                    print(f"Trailing SL updated for {stock_symbol}. New TSL: {new_trailing_sl}")
-    
-    except Exception as e:
-        logging.error(f"Error updating paper trade for {stock_symbol}: {e}")
+            results.append((symbol, investment, live_price, shares_to_buy, target_price, stop_loss_price, "No Action"))
 
-def plot_paper_trade(stock_symbol):
-    """Plots the price movements along with SL, target, and trailing SL."""
-    trade_data = paper_trades[stock_symbol]
-    prices = trade_data['prices']
-    times = [p[0] for p in prices]
-    price_values = [p[1] for p in prices]
-    
-    # Plot the stock price
-    plt.figure(figsize=(10, 6))
-    plt.plot(times, price_values, label='Stock Price', marker='o')
-    
-    # Plot the buy price
-    plt.axhline(y=trade_data['buy_price'], color='blue', linestyle='--', label='Buy Price')
-    
-    # Plot the stop loss (SL)
-    plt.axhline(y=trade_data['sl'], color='red', linestyle='--', label='Stop Loss (SL)')
-    
-    # Plot the target
-    plt.axhline(y=trade_data['target'], color='green', linestyle='--', label='Target Price')
-    
-    # Plot the trailing stop loss (TSL)
-    trailing_sls = [trade_data['trailing_sl']] * len(times)  # Keep TSL constant for simplicity
-    plt.plot(times, trailing_sls, label='Trailing SL', color='orange', linestyle='--')
-    
-    # Labels and title
-    plt.title(f"Paper Trade Results for {stock_symbol}")
-    plt.xlabel("Time")
-    plt.ylabel("Price")
-    plt.legend()
-    
-    # Show the plot
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    return pd.DataFrame(results, columns=["Stock", "Investment", "Buy Price", "Shares Bought", "Target", "Stop Loss", "Status"])
 
-# Function to execute paper trades for top 3 stocks
-def execute_paper_trades():
-    """Executes paper trades for the top 3 stocks."""
-    top_3_stocks = ['TATASTEEL', 'RELIANCE', 'SBIN']  # Replace with your top 3 stock selection logic
-    for stock in top_3_stocks:
-        paper_trade(stock)
 
-# Function to check and update all open trades
-def check_and_update_trades():
-    """Checks the status of all open trades and updates them."""
-    for stock_symbol in paper_trades.keys():
-        if paper_trades[stock_symbol]['status'] == 'open':
-            update_paper_trade(stock_symbol)
+# Get top 3 high growth stocks
+top_stocks = select_top_growth_stocks(high_growth_stocks)
 
-# Schedule the execution of trades and updates (runs every minute for paper trading simulation)
-schedule.every().day.at("09:15").do(execute_paper_trades)  # Start trades at market open
-schedule.every(1).minute.do(check_and_update_trades)  # Update trades every minute
+# Perform paper trading on top stocks
+trade_results = paper_trade(top_stocks)
 
-# Run the scheduled tasks
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# Print the results
+print(trade_results)
+
+
+
+
+import numpy as np
+import pandas as pd
+import logging
+import time
+
+# Function to select the top 3 high growth stocks based on percentage change
+def select_top_growth_stocks(growth_stocks, n=3):
+    """Selects top N high growth stocks based on percentage change."""
+    sorted_stocks = sorted(growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+    top_stocks = sorted_stocks[:n]
+    return {symbol: (percent, volume) for symbol, (percent, volume) in top_stocks}
+
+
+# Function to monitor stocks and execute sell as per target or stop-loss
+def monitor_stocks(stocks, investment_per_stock=50000, target=0.001, stop_loss=0.001):
+    """Monitors stocks and executes sell based on target or stop-loss."""
+    trade_info = {}
+    
+    # Initialize trades
+    for symbol in stocks:
+        live_price = fetch_live_price(symbol)
+        shares_to_buy = investment_per_stock // live_price
+        target_price = live_price * (1 + target)
+        stop_loss_price = live_price * (1 - stop_loss)
         
+        trade_info[symbol] = {
+            'investment': investment_per_stock,
+            'buy_price': live_price,
+            'shares_bought': shares_to_buy,
+            'target_price': target_price,
+            'stop_loss_price': stop_loss_price,
+            'status': 'Holding'
+        }
+
+    while trade_info:  # Continue while there are stocks being monitored
+        for symbol in list(trade_info.keys()):  # Use list to avoid modifying dict during iteration
+            current_price = fetch_live_price(symbol)
+            
+            # Print live price and trade status
+            print(f"Monitoring {symbol}: Live Price = {current_price:.2f}, Status = {trade_info[symbol]['status']}")
+            
+            # Check for target hit or stop loss hit
+            if current_price >= trade_info[symbol]['target_price']:
+                print(f"target hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"target hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                      f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                del trade_info[symbol]  # Remove the stock from monitoring
+            
+            elif current_price <= trade_info[symbol]['stop_loss_price']:
+                print(f"stop loss hit Sold {trade_info[symbol]['shares_bought']} shares of {symbol} at {current_price:.2f}.")
+                print(f"stop loss hit Investment: {trade_info[symbol]['investment']}, Buy Price: {trade_info[symbol]['buy_price']:.2f}, "
+                      f"Target: {trade_info[symbol]['target_price']:.2f}, Stop Loss: {trade_info[symbol]['stop_loss_price']:.2f}")
+                del trade_info[symbol]  # Remove the stock from monitoring
+        
+        time.sleep(1)  # Sleep for a second before checking again
+
+# Example of how to use the functions
+# Get top 3 high growth stocks
+top_stocks = select_top_growth_stocks(high_growth_stocks)
+
+# Monitor the stocks and execute sell based on target or stop-loss
+monitor_stocks(top_stocks)
