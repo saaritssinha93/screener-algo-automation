@@ -15,6 +15,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import os
 from pyotp import TOTP
+import pandas as pd
 
 cwd = os.chdir("C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation")
 
