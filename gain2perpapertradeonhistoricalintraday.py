@@ -407,6 +407,8 @@ for share in shares:
 
 # Get top 3 high growth stocks based on 9:45 AM data
 top_stocks = select_top_growth_stocks(high_growth_stocks)
+<<<<<<< HEAD
+=======
 
 # Perform paper trading on top stocks
 trade_results = paper_trade(top_stocks)
@@ -416,3 +418,16 @@ print(trade_results)
 
 # Monitor the stocks and execute sell based on target or stop-loss
 monitor_stocks(top_stocks)
+>>>>>>> 5160e6cd5e7678ff2e9fbca265e59b124304ba68
+
+# Perform paper trading on top stocks
+trade_results = paper_trade(top_stocks)
+
+# Print the results
+print(trade_results)
+
+<<<<<<< HEAD
+# Monitor the stocks and execute sell based on target or stop-loss
+monitor_stocks(top_stocks)
+=======
+>>>>>>> 5160e6cd5e7678ff2e9fbca265e59b124304ba68
