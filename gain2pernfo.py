@@ -216,7 +216,6 @@ def print_price_comparison(symbol):
         logging.error(f"Could not fetch historical data for {symbol}")
 
 # Modified function to print the high growth stocks
-# Modified function to print the high growth stocks, sorted in descending order
 def print_high_growth_stocks():
     """Prints the stocks with a growth of 2% or more along with volume change, sorted by percent growth in descending order."""
     logging.info("Stocks with 2% or more increase:")
@@ -225,12 +224,19 @@ def print_high_growth_stocks():
         # Sort the stocks by percentage growth in descending order
         sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
         
-        for stock, (percent, volume_change) in sorted_stocks:
-            print(f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%")
+        # Create a DataFrame to store the results
+        sorted_df = pd.DataFrame(sorted_stocks, columns=["Stock", "Growth (%)"])
+        sorted_df["Volume Change (%)"] = [volume_change for percent, volume_change in sorted_stocks]
+        
+        # Print the DataFrame
+        print(sorted_df)
+
+        # Return the sorted DataFrame for further processing if needed
+        return sorted_df
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
-
+        return pd.DataFrame(columns=["Stock", "Growth (%)", "Volume Change (%)"])
 
 
 # Call your functions manually instead of using a scheduler
@@ -238,7 +244,10 @@ def print_high_growth_stocks():
 for share in shares:
     print_price_comparison(share)
 
-print_high_growth_stocks()
+# Get the sorted high growth stocks
+high_growth_stocks_df = print_high_growth_stocks()
+
+
 
 
 # Function to select the top 3 high growth stocks based on percentage change
@@ -302,3 +311,126 @@ trade_results = paper_trade(top_stocks)
 
 # Print the results
 print(trade_results)
+
+
+
+
+
+# Function to fetch futures data
+def fetch_futures_data(symbol, expiry_date):
+    """Fetch futures data for a given symbol and expiry date."""
+    try:
+        tradingsymbol = f"{symbol}{expiry_date.strftime('%y%b').upper()}FUT"
+        instrument = instrument_lookup(nfo_instrument_df, tradingsymbol)
+
+        if instrument == -1:
+            raise ValueError(f"No futures data found for {tradingsymbol}")
+        
+        # Fetch live futures data
+        live_futures_price = kite.ltp(f"NFO:{tradingsymbol}")
+        return live_futures_price[f"NFO:{tradingsymbol}"]["last_price"]
+    
+    except Exception as e:
+        logging.error(f"Error fetching futures data for {symbol}: {e}")
+        return None
+
+# Function to fetch options data
+def fetch_options_data(symbol, expiry_date, strike_price, option_type):
+    """Fetch options data for a given symbol, expiry date, strike price, and option type (CE/PE)."""
+    try:
+        tradingsymbol = f"{symbol}{expiry_date.strftime('%y%b').upper()}{strike_price}{option_type.upper()}"
+        instrument = instrument_lookup(nfo_instrument_df, tradingsymbol)
+
+        if instrument == -1:
+            raise ValueError(f"No options data found for {tradingsymbol}")
+        
+        # Fetch live options data
+        live_options_price = kite.ltp(f"NFO:{tradingsymbol}")
+        return live_options_price[f"NFO:{tradingsymbol}"]["last_price"]
+
+    except Exception as e:
+        logging.error(f"Error fetching options data for {symbol}: {e}")
+        return None
+
+# Function to fetch available strikes from NSE data
+# Function to fetch available strikes from NSE data
+def get_available_strikes(symbol, expiry_date):
+    """Fetch available strikes for a given symbol from NSE data."""
+    try:
+        options_chain_symbol = f"{symbol}{expiry_date.strftime('%y%b').upper()}"
+        options_instruments = nfo_instrument_df[nfo_instrument_df['tradingsymbol'].str.startswith(options_chain_symbol)]
+        
+        # Check if the correct column exists in the DataFrame
+        correct_column_name = 'strike'  # Replace with the actual column name you find
+        if correct_column_name not in options_instruments.columns:
+            logging.error(f"'{correct_column_name}' column not found in the options instruments DataFrame for {symbol}.")
+            return []
+        
+        # Extract available strikes from the instruments
+        available_strikes = options_instruments[correct_column_name].unique()
+        return sorted(available_strikes)  # Sort to easily find ATM later
+        
+    except Exception as e:
+        logging.error(f"Error fetching available strikes for {symbol}: {e}")
+        return []
+
+
+
+# Function to find ATM strike price from available strikes
+# Function to find ATM strike price from available strikes
+def find_atm_strike_price(futures_price, available_strikes):
+    """
+    Find the nearest ATM strike price from available strikes list based on the futures price.
+    The returned strike price will be an integer.
+    """
+    available_strikes.sort()  # Ensure the list is sorted
+    closest_strike = min(available_strikes, key=lambda x: abs(x - futures_price))
+    return int(closest_strike)  # Convert to integer before returning
+
+
+# Example usage to fetch NFO data for sorted high-growth stocks
+def fetch_nfo_data_for_high_growth_stocks(high_growth_stocks_df, expiry_date):
+    """
+    Fetch NFO data for the stocks in the high growth DataFrame.
+    This function uses futures price to calculate the nearest ATM strike.
+    """
+    for index, row in high_growth_stocks_df.iterrows():
+        symbol = row['Stock']  # Assuming 'Stock' is the column name for stock symbols
+        
+        # Fetch futures price
+        futures_price = fetch_futures_data(symbol, expiry_date)
+
+        if futures_price:
+            # Fetch available strikes dynamically from NSE data
+            available_strikes = get_available_strikes(symbol, expiry_date)
+
+            if available_strikes:
+                # Find the closest ATM strike price from the available strikes list
+                atm_strike_price = find_atm_strike_price(futures_price, available_strikes)
+                print(f"ATM Strike Price for {symbol}: {atm_strike_price}")
+                
+                # Fetch ATM call and put options
+                atm_call_option_price = fetch_options_data(symbol, expiry_date, atm_strike_price, "CE")
+                atm_put_option_price = fetch_options_data(symbol, expiry_date, atm_strike_price, "PE")
+
+                if atm_call_option_price:
+                    print(f"{symbol} {atm_strike_price}CE Option Price (Expiry: {expiry_date}): {atm_call_option_price}")
+                else:
+                    print(f"{symbol} {atm_strike_price}CE Option Price not available.")
+                
+                if atm_put_option_price:
+                    print(f"{symbol} {atm_strike_price}PE Option Price (Expiry: {expiry_date}): {atm_put_option_price}")
+                else:
+                    print(f"{symbol} {atm_strike_price}PE Option Price not available.")
+            else:
+                print(f"No available strikes found for {symbol}.")
+        else:
+            print(f"Futures price not available for {symbol}.")
+
+# Example setup
+expiry_date = dt.date(2024, 10, 26)  # Example expiry date for futures/options
+
+# Assuming high_growth_stocks_df is the DataFrame containing sorted high-growth stocks
+fetch_nfo_data_for_high_growth_stocks(high_growth_stocks_df, expiry_date)
+
+

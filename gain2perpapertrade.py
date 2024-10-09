@@ -290,16 +290,21 @@ def print_price_comparison(symbol):
     else:
         logging.error(f"Could not fetch historical data for {symbol}")
 
-# Modified function to print the high growth stocks
+# Modified function to print the high growth stocks, sorted in descending order
 def print_high_growth_stocks():
-    """Prints the stocks with a growth of 2% or more along with volume change."""
+    """Prints the stocks with a growth of 2% or more along with volume change, sorted by percent growth in descending order."""
     logging.info("Stocks with 2% or more increase:")
+
     if high_growth_stocks:
-        for stock, (percent, volume_change) in high_growth_stocks.items():
+        # Sort the high_growth_stocks dictionary by the percent change in descending order
+        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+        
+        for stock, (percent, volume_change) in sorted_stocks:
             print(f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%")
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
+
 
 
 # Call your functions manually instead of using a scheduler
