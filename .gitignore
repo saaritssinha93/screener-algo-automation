@@ -6,3 +6,4 @@ high_growth_stocks.csv
 Merged_NSE_BSE_Instruments.csv
 NSE_Instruments.csv
 today_5min_data.csv
+*.csv
