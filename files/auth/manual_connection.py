@@ -5,14 +5,14 @@ Connecting to KiteConnect API
 from kiteconnect import KiteConnect
 import pandas as pd
 
-api_key = "aqj8zomxww68pels"
-api_secret = "vtjv7herpc9f5qblhnyjcn0mjndnwkt6"
+api_key = ""
+api_secret = ""
 kite = KiteConnect(api_key=api_key)
 print(kite.login_url()) #use this url to manually login and authorize yourself
 
 
 #generate trading session
-request_token = "0jzlqs3VVf333a3AcDZrdCon0NTyI0P7" #Extract request token from the redirect url obtained after you authorize yourself by loggin in
+request_token = "" #Extract request token from the redirect url obtained after you authorize yourself by loggin in
 data = kite.generate_session(request_token, api_secret=api_secret)
 
 
