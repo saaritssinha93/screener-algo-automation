@@ -425,8 +425,8 @@ print(trade_results)
 all_high_growth_stocks = high_growth_stocks  # Assuming high_growth_stocks is your full list
 
 # Example usage: Scan 5-minute intervals for all high-growth stocks
-start_date = dt.datetime(2024, 10, 11)
-end_date = dt.datetime(2024, 10, 12)
+start_date = dt.datetime(2024, 10, 10)
+end_date = dt.datetime(2024, 10, 11)
 
 # Scan 5-minute intervals for all the high-growth stocks
 fetch_5min_intervals_for_high_growth_stocks(all_high_growth_stocks, start_date, end_date, threshold=1)
