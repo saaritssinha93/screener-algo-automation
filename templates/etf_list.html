@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF List with Prices</title>
+</head>
+<body>
+    <h1>ETF List with Prices</h1>
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Current Price</th>
+        </tr>
+        {% for etf in etf_data %}
+        <tr>
+            <td>{{ etf.name }}</td>
+            <td>{{ etf.price }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{{ url_for('index') }}">
+        <button>Back to Home</button>
+    </a>
+</body>
+</html>

@@ -1,0 +1,198 @@
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif; /* Fallback font */
+    background-color: #fff3e0; /* Light cream color to complement orange */
+    margin: 0;
+    padding: 20px;
+    position: relative; /* Position relative for absolute elements */
+}
+
+h1 {
+    font-family: 'Montserrat', sans-serif; /* Use the Montserrat font */
+    text-align: center; /* Center the heading */
+    animation: colorChange 120s infinite; /* Change colors every 10 seconds */
+    font-size: 3rem; /* Increase font size for better visibility */
+    font-weight: 700; /* Use a bold weight for clarity */
+    padding: 10px; /* Add padding around the text */
+    border: 5px solid transparent; /* Set initial border */
+    border-radius: 10px; /* Rounded corners for the border */
+    background-clip: text; /* Clip background to text */
+    -webkit-background-clip: text; /* For Safari compatibility */
+    position: relative; /* Position relative to add line */
+    z-index: 1; /* Bring the text above the line */
+}
+
+/* Create the static line above the heading */
+h1::before {
+    content: '';
+    position: absolute; /* Position absolutely */
+    top: -60px; /* Adjust to sit further above the text */
+    left: 50%; /* Center the line horizontally */
+    width: 5px; /* Width of the line */
+    height: 60px; /* Height of the line */
+    background-color: transparent; /* Initial color of the line (transparent) */
+    transform: translateX(-50%); /* Center the line */
+    z-index: 0; /* Send the line behind the text */
+}
+
+/* Color changing animation for h1 */
+@keyframes colorChange {
+    0% {
+        color: #e67e22; /* Orange */
+        border-color: #e67e22; /* Border matches the text */
+    }
+    8.33% {
+        color: #3498db; /* Blue */
+        border-color: #3498db;
+    }
+    16.67% {
+        color: #2ecc71; /* Green */
+        border-color: #2ecc71;
+    }
+    25% {
+        color: #e74c3c; /* Red */
+        border-color: #e74c3c;
+    }
+    33.33% {
+        color: #9b59b6; /* Purple */
+        border-color: #9b59b6;
+    }
+    41.67% {
+        color: #f39c12; /* Yellow */
+        border-color: #f39c12;
+    }
+    50% {
+        color: #d35400; /* Pumpkin */
+        border-color: #d35400;
+    }
+    58.33% {
+        color: #1abc9c; /* Turquoise */
+        border-color: #1abc9c;
+    }
+    66.67% {
+        color: #2980b9; /* Dark Blue */
+        border-color: #2980b9;
+    }
+    75% {
+        color: #8e44ad; /* Violet */
+        border-color: #8e44ad;
+    }
+    83.33% {
+        color: #c0392b; /* Fire Red */
+        border-color: #c0392b;
+    }
+    91.67% {
+        color: #f1c40f; /* Bright Yellow */
+        border-color: #f1c40f;
+    }
+    100% {
+        color: #e67e22; /* Back to Orange */
+        border-color: #e67e22;
+    }
+}
+
+/* Create an animation for the line color matching the border color */
+h1::before {
+    animation: lineColorChange 120s infinite; /* Line color matches border color animation */
+}
+
+@keyframes lineColorChange {
+    0% {
+        background-color: #e67e22; /* Line color matches the text color */
+    }
+    8.33% {
+        background-color: #3498db; /* Line matches the blue */
+    }
+    16.67% {
+        background-color: #2ecc71; /* Line matches the green */
+    }
+    25% {
+        background-color: #e74c3c; /* Line matches the red */
+    }
+    33.33% {
+        background-color: #9b59b6; /* Line matches the purple */
+    }
+    41.67% {
+        background-color: #f39c12; /* Line matches the yellow */
+    }
+    50% {
+        background-color: #d35400; /* Line matches the pumpkin color */
+    }
+    58.33% {
+        background-color: #1abc9c; /* Line matches the turquoise */
+    }
+    66.67% {
+        background-color: #2980b9; /* Line matches the dark blue */
+    }
+    75% {
+        background-color: #8e44ad; /* Line matches the violet */
+    }
+    83.33% {
+        background-color: #c0392b; /* Line matches the fire red */
+    }
+    91.67% {
+        background-color: #f1c40f; /* Line matches the bright yellow */
+    }
+    100% {
+        background-color: #e67e22; /* Back to orange */
+    }
+}
+
+.button-container {
+    margin-top: 35px; /* Space above the button container */
+    text-align: left; /* Align button container to the left */
+}
+
+.button-row {
+    display: flex; /* Use flexbox for layout */
+    justify-content: flex-start; /* Align buttons to the left */
+    margin-bottom: 15px; /* Space between rows */
+}
+
+button {
+    background-color: #fff; /* White background for the button */
+    color: orange; /* Orange text color */
+    border: 3px solid orange; /* Initial orange border for the button */
+    padding: 20px 40px; /* Increased padding for a larger button */
+    font-size: 24px; /* Increased font size for better visibility */
+    border-radius: 10px; /* Rounded corners */
+    cursor: pointer;
+    transition: border-color 0.3s, transform 0.3s; /* Add transition for border color and scale */
+    margin: 0 10px; /* Equal space between buttons */
+}
+
+/* Sync only button border colors with the heading colors */
+@keyframes buttonBorderColorChange {
+    0% { border-color: #e67e22; } /* Orange */
+    8.33% { border-color: #3498db; } /* Blue */
+    16.67% { border-color: #2ecc71; } /* Green */
+    25% { border-color: #e74c3c; } /* Red */
+    33.33% { border-color: #9b59b6; } /* Purple */
+    41.67% { border-color: #f39c12; } /* Yellow */
+    50% { border-color: #d35400; } /* Pumpkin */
+    58.33% { border-color: #1abc9c; } /* Turquoise */
+    66.67% { border-color: #2980b9; } /* Dark Blue */
+    75% { border-color: #8e44ad; } /* Violet */
+    83.33% { border-color: #c0392b; } /* Fire Red */
+    91.67% { border-color: #f1c40f; } /* Bright Yellow */
+    100% { border-color: #e67e22; } /* Back to Orange */
+}
+
+/* Apply the border color change animation to buttons */
+button {
+    animation: buttonBorderColorChange 120s infinite; /* Apply the border color change animation */
+}
+
+/* Button hover effect */
+button:hover {
+    transform: scale(1.05); /* Slightly enlarge the button on hover */
+}
+
+button:active {
+    transform: scale(0.95); /* Slightly shrink the button on click */
+}
+
+a {
+    text-decoration: none; /* Remove underline from link */
+}
