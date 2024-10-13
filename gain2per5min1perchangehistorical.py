@@ -29,102 +29,102 @@ os.chdir(cwd)
 
 # Stocks
 shares = [
-   'AARTIDRUGS', 'AARTISURF-BE', 'ABFRL', 'ADANIPOWER', 'ADVENZYMES', 
-   'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'ARE&M', 
-   'ANANTRAJ', 'APCOTEXIND', 'APLAPOLLO', 'ARCHIDPLY', 'ASHOKA',
-   'ASIANHOTNR', 'ASTERDM', 'AUROPHARMA', 'AXISBANK', 'BALAMINES',
-   'BALRAMCHIN', 'BANCOINDIA', 'BASF', 'BATAINDIA',
-   'BAYERCROP', 'BDL', 'BEL', 'BEML',
-   'BERGEPAINT', 'BFUTILITIE', 'BGRENERGY-BE', 'BHAGERIA-BE', 'BHARATGEAR',
-   'BIRLAMONEY-BE', 'BLUESTARCO', 'BOROLTD', 'BRIGADE', 'BSOFT',
-   'CAPLIPOINT', 'CARYSIL', 'CEATLTD', 'CENTUM', 'CHALET',
-   'CHEMCON', 'CHEMFAB', 'CHEMPLASTS', 'CHOLAHLDNG', 'TITAGARH' ,
-   'COCHINSHIP-BE', 'COFORGE', 'COSMOFIRST', 'CROMPTON', 'CSBBANK',
-   'CYIENT', 'LTFOODS', 'DCAL', 'DEEPAKFERT', 'DELTACORP',
-   'DENORA', 'DISHTV', 'DOLLAR', 'DPSCLTD', 'DREDGECORP',
-   'DYNPRO-BE', 'ECLERX', 'EDELWEISS', 'EIDPARRY', 'EIHOTEL',
-   'ELGIEQUIP', 'EMAMILTD', 'EMIL', 'ENDURANCE', 'ENGINERSIN',
-   'ERIS', 'ESABINDIA' , 'FEDERALBNK', 'FIEMIND',
-   'FINPIPE', 'FLUOROCHEM', 'GABRIEL', 'GAIL', 'GALAXYSURF',
-   'GARFIBRES', 'GATEWAY', 'GEPIL', 'GHCL', 'GICHSGFIN',
-   'GILLETTE', 'GIPCL', 'GLS', 'GNA', 'GNFC',
-   'GODFRYPHLP', 'GOODYEAR', 'GRAUWEIL', 'GRINDWELL', 'GLAXO',
-   'GTPL', 'GUFICBIO', 'GULFOILLUB', 'HAPPSTMNDS', 'HARRMALAYA-BE',
-   'HATSUN', 'HERITGFOOD', 'HFCL', 'HIKAL',
-   'HINDCOPPER', 'HINDZINC', 'HMVL', 'HINDOILEXP', 'HONAUT',
-   'HSIL', 'ICIL', 'ICRA', 'IDBI', 'IDFCFIRSTB',
-   'IFBIND', 'IIFL', 'IL&FSENGG-BZ', 'IMFA', 'INDIANB',
-   'INDIANCARD', 'INDIGO', 'INDORAMA', 'INDOSTAR', 'STYRENIX',
-   'INFIBEAM', 'INTELLECT', 'IRB', 'IRCON', 'ISEC',
-   'ITI', 'J&KBANK', 'JAICORPLTD', 'JAMNAAUTO', 'JASH',
-   'JBCHEPHARM', 'JETAIRWAYS-BZ', 'JINDALPHOT', 'JISLJALEQS', 'JKCEMENT',
-   'JKLAKSHMI', 'JKPAPER', 'JMFINANCIL', 'JSL', 'JTEKTINDIA',
-   'JUBLFOOD', 'JUBLINDS', 'KABRAEXTRU', 'KAJARIACER', 'KPIL',
-   'KANSAINER', 'KEI', 'KIRLOSENG', 'KITEX',
-   'KNRCON', 'KOKUYOCMLN', 'KOLTEPATIL', 'KOPRAN', 'KRBL',
-   'KSB', 'LTF', 'LAOPALA', 'LEMONTREE', 'LINDEINDIA',
-   'LUXIND', 'M&MFIN', 'MAHABANK', 'CIEINDIA', 'MAHSCOOTER',
-   'MAITHANALL', 'MANAKSIA', 'MARKSANS', 'MASTEK', 'MAYURUNIQ',
-   'MAZDOCK', 'MBAPL', 'UNITDSPR', 'MINDACORP',
-   'MOLDTECH', 'MONTECARLO', 'MOREPENLAB', 'MOTILALOFS', 'MPHASIS',
-   'MRPL', 'MSTCLTD', 'MTARTECH', 'MUKANDLTD', 'MUNJALSHOW',
-   'NATCOPHARM', 'NATIONALUM', 'NBCC', 'NCC', 'NDL',
-   'NELCO', 'NESCO', 'NESTLEIND', 'NLCINDIA', 'NMDC',
-   'NOCIL', 'NRAIL', 'NTPC', 'NUCLEUS', 'OBEROIRLTY',
-   'OIL', 'OLECTRA', 'OMAXE', 'ONGC', 'ORIENTCEM',
-   'ORIENTELEC', 'ORTINGLOBE' , 'PAGEIND', 'PANAMAPET', 'PARAGMILK',
-  'PCJEWELLER-BE', 'PDSL', 'PEL', 'PERSISTENT', 'PETRONET',
-  'PFIZER', 'GODFRYPHLP', 'PILANIINVS', 'PNBHOUSING', 'POLYCAB',
-  'POWERINDIA', 'PRAJIND', 'PRSMJOHNSN', 'PTC',
-  'RAILTEL', 'RAIN', 'RALLIS', 'RANEHOLDIN', 'RATNAMANI',
-  'RAYMOND', 'RECLTD', 'RELAXO', 'RELINFRA-BE', 'RENUKA',
-  'RITES', 'ROSSARI', 'RTNPOWER' , 'RUCHINFRA-BE',
-  'RVNL', 'SAGCEM', 'SANOFI', 'SARDAEN', 'SBICARD',
-  'SCI', 'SEQUENT-BE', 'SHILPAMED', 'SHOPERSTOP', 'SHREDIGCEM',
-  'SEPC', 'SHYAMMETL', 'SIEMENS', 'SIS', 'SJS',
-  'SKFINDIA', 'SOBHA', 'SOLARA', 'SONACOMS', 'SOUTHBANK',
-  'SPAL', 'SPARC', 'SRHHYPOLTD', 'SHRIRAMFIN', 'STAR',
-  'STCINDIA', 'STLTECH', 'SUBEXLTD', 'SUDARSCHEM', 'SUNDRMFAST',
-  'SUNPHARMA', 'SPLPETRO', 'SUPRAJIT', 'SUVEN', 'SWARAJENG',
-  'SYMPHONY', 'TANLA', 'TATAINVEST', 'TCPLPACK',
-  'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TEGA',
-  'THEINVEST', 'THERMAX', 'TIMKEN', 'TITAN', 'TORNTPOWER',
-  'TRENT', 'TRITURBINE', 'TTKPRESTIG', 'TV18BRDCST', 'TVSMOTOR',
-  'UCOBANK', 'ULTRACEMCO', 'UNIONBANK', 'UNOMINDA', 'UPL',
-  'UJJIVANSFB', 'VAKRANGEE', 'VARROC', 'VEDL', 'VENKEYS',
-  'VGUARD', 'VIPIND', 'VOLTAMP', 'VSTIND',
-  'ZFCVINDIA', 'WALCHANNAG', 'WELCORP', 'WELSPUNLIV', 'WHIRLPOOL',
-  'WOCKPHARMA', 'YESBANK', 'ZEEL', 'ZENITHSTL-BE', 'ZENTEC',
-  # Nifty 50 stocks list
-  'ADANIPORTS', 'ASIANPAINT', 'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 
-  'BAJAJFINSV', 'BPCL', 'BHARTIARTL', 'BRITANNIA', 'CIPLA', 
-  'COALINDIA', 'DIVISLAB', 'DRREDDY', 'EICHERMOT', 'GRASIM', 
-  'HCLTECH', 'HDFCBANK', 'HEROMOTOCO', 'HINDALCO', 
-  'HINDUNILVR', 'ICICIBANK', 'ITC', 'INDUSINDBK', 'INFY', 
-  'JSWSTEEL', 'KOTAKBANK', 'LT', 'M&M', 'MARUTI', 
-  'NESTLEIND', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 
-  'SBILIFE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATACONSUM', 
-  'TATAMOTORS', 'TATASTEEL', 'TECHM', 'TITAN', 'ULTRACEMCO', 
-  'UPL', 'WIPRO', 'NEULANDLAB', 'YATHARTH',
-  # Top 100 midcap stocks
-  'ADANIGREEN', 'ADANIPORTS', 'AJANTPHARM', 'ALKEM', 'AMBUJACEM', 
-  'APOLLOHOSP', 'ASHOKLEY', 'ASTRAL', 'ATUL', 'AVANTIFEED',
-  'BAJFINANCE', 'BAJAJHFL', 'BANKBARODA', 'BEL', 'BHARATFORG',
-  'BHARTIARTL', 'BIRLACORPN', 'ZYDUSLIFE', 'CANFINHOME', 'CEATLTD',
-  'CENTRALBK', 'CIPLA', 'COFORGE', 'COLPAL', 'CONCOR',
-  'CROMPTON', 'DABUR', 'DCMSHRIRAM', 'DEEPAKNTR', 'DIVISLAB',
-  'DIXON', 'DLF', 'EICHERMOT', 'ESCORTS', 'EXIDEIND',
-  'GAIL', 'GLAND', 'GLAXO', 'GMRINFRA', 'GRANULES',
-  'HAVELLS', 'HDFCLIFE', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
-  'ICICIBANK', 'IGL', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER',
-  'IRCTC', 'JINDALSTEL', 'JSL', 'KEC', 'KIRLOSENG',
-  'LTF', 'LT', 'LTIM', 'MOTHERSON', 'MUTHOOTFIN',
-  'NIITLTD', 'NOCIL', 'OIL', 'PERSISTENT', 'PIDILITIND',
-  'POLYCAB', 'PVRINOX', 'RAMCOCEM', 'RELIANCE', 'SAIL',
-  'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
-  'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
-  'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
-  'WIPRO', 'ZENSARTECH'
+    'AARTIDRUGS', 'AARTISURF-BE', 'ABFRL', 'ADANIPOWER', 'ADVENZYMES', 
+    'AFFLE', 'AGARIND', 'AJMERA', 'ALEMBICLTD', 'ARE&M', 
+    'ANANTRAJ', 'APCOTEXIND', 'APLAPOLLO', 'ARCHIDPLY', 'ASHOKA',
+    'ASIANHOTNR', 'ASTERDM', 'AUROPHARMA', 'AXISBANK', 'BALAMINES',
+    'BALRAMCHIN', 'BANCOINDIA', 'BASF', 'BATAINDIA',
+    'BAYERCROP', 'BDL', 'BEL', 'BEML',
+    'BERGEPAINT', 'BFUTILITIE', 'BGRENERGY-BE', 'BHAGERIA-BE', 'BHARATGEAR',
+    'BIRLAMONEY-BE', 'BLUESTARCO', 'BOROLTD', 'BRIGADE', 'BSOFT',
+    'CAPLIPOINT', 'CARYSIL', 'CEATLTD', 'CENTUM', 'CHALET',
+    'CHEMCON', 'CHEMFAB', 'CHEMPLASTS', 'CHOLAHLDNG', 'TITAGARH' ,
+    'COCHINSHIP-BE', 'COFORGE', 'COSMOFIRST', 'CROMPTON', 'CSBBANK',
+    'CYIENT', 'LTFOODS', 'DCAL', 'DEEPAKFERT', 'DELTACORP',
+    'DENORA', 'DISHTV', 'DOLLAR', 'DPSCLTD', 'DREDGECORP',
+    'DYNPRO-BE', 'ECLERX', 'EDELWEISS', 'EIDPARRY', 'EIHOTEL',
+    'ELGIEQUIP', 'EMAMILTD', 'EMIL', 'ENDURANCE', 'ENGINERSIN',
+    'ERIS', 'ESABINDIA' , 'FEDERALBNK', 'FIEMIND',
+    'FINPIPE', 'FLUOROCHEM', 'GABRIEL', 'GAIL', 'GALAXYSURF',
+    'GARFIBRES', 'GATEWAY', 'GEPIL', 'GHCL', 'GICHSGFIN',
+    'GILLETTE', 'GIPCL', 'GLS', 'GNA', 'GNFC',
+    'GODFRYPHLP', 'GOODYEAR', 'GRAUWEIL', 'GRINDWELL', 'GLAXO',
+    'GTPL', 'GUFICBIO', 'GULFOILLUB', 'HAPPSTMNDS', 'HARRMALAYA-BE',
+    'HATSUN', 'HERITGFOOD', 'HFCL', 'HIKAL',
+    'HINDCOPPER', 'HINDZINC', 'HMVL', 'HINDOILEXP', 'HONAUT',
+    'HSIL', 'ICIL', 'ICRA', 'IDBI', 'IDFCFIRSTB',
+    'IFBIND', 'IIFL', 'IL&FSENGG-BZ', 'IMFA', 'INDIANB',
+    'INDIANCARD', 'INDIGO', 'INDORAMA', 'INDOSTAR', 'STYRENIX',
+    'INFIBEAM', 'INTELLECT', 'IRB', 'IRCON', 'ISEC',
+    'ITI', 'J&KBANK', 'JAICORPLTD', 'JAMNAAUTO', 'JASH',
+    'JBCHEPHARM', 'JETAIRWAYS-BZ', 'JINDALPHOT', 'JISLJALEQS', 'JKCEMENT',
+    'JKLAKSHMI', 'JKPAPER', 'JMFINANCIL', 'JSL', 'JTEKTINDIA',
+    'JUBLFOOD', 'JUBLINDS', 'KABRAEXTRU', 'KAJARIACER', 'KPIL',
+    'KANSAINER', 'KEI', 'KIRLOSENG', 'KITEX',
+    'KNRCON', 'KOKUYOCMLN', 'KOLTEPATIL', 'KOPRAN', 'KRBL',
+    'KSB', 'LTF', 'LAOPALA', 'LEMONTREE', 'LINDEINDIA',
+    'LUXIND', 'M&MFIN', 'MAHABANK', 'CIEINDIA', 'MAHSCOOTER',
+    'MAITHANALL', 'MANAKSIA', 'MARKSANS', 'MASTEK', 'MAYURUNIQ',
+    'MAZDOCK', 'MBAPL', 'UNITDSPR', 'MINDACORP',
+    'MOLDTECH', 'MONTECARLO', 'MOREPENLAB', 'MOTILALOFS', 'MPHASIS',
+    'MRPL', 'MSTCLTD', 'MTARTECH', 'MUKANDLTD', 'MUNJALSHOW',
+    'NATCOPHARM', 'NATIONALUM', 'NBCC', 'NCC', 'NDL',
+    'NELCO', 'NESCO', 'NESTLEIND', 'NLCINDIA', 'NMDC',
+    'NOCIL', 'NRAIL', 'NTPC', 'NUCLEUS', 'OBEROIRLTY',
+    'OIL', 'OLECTRA', 'OMAXE', 'ONGC', 'ORIENTCEM',
+    'ORIENTELEC', 'ORTINGLOBE' , 'PAGEIND', 'PANAMAPET', 'PARAGMILK',
+   'PCJEWELLER-BE', 'PDSL', 'PEL', 'PERSISTENT', 'PETRONET',
+   'PFIZER', 'GODFRYPHLP', 'PILANIINVS', 'PNBHOUSING', 'POLYCAB',
+   'POWERINDIA', 'PRAJIND', 'PRSMJOHNSN', 'PTC',
+   'RAILTEL', 'RAIN', 'RALLIS', 'RANEHOLDIN', 'RATNAMANI',
+   'RAYMOND', 'RECLTD', 'RELAXO', 'RELINFRA-BE', 'RENUKA',
+   'RITES', 'ROSSARI', 'RTNPOWER' , 'RUCHINFRA-BE',
+   'RVNL', 'SAGCEM', 'SANOFI', 'SARDAEN', 'SBICARD',
+   'SCI', 'SEQUENT-BE', 'SHILPAMED', 'SHOPERSTOP', 'SHREDIGCEM',
+   'SEPC', 'SHYAMMETL', 'SIEMENS', 'SIS', 'SJS',
+   'SKFINDIA', 'SOBHA', 'SOLARA', 'SONACOMS', 'SOUTHBANK',
+   'SPAL', 'SPARC', 'SRHHYPOLTD', 'SHRIRAMFIN', 'STAR',
+   'STCINDIA', 'STLTECH', 'SUBEXLTD', 'SUDARSCHEM', 'SUNDRMFAST',
+   'SUNPHARMA', 'SPLPETRO', 'SUPRAJIT', 'SUVEN', 'SWARAJENG',
+   'SYMPHONY', 'TANLA', 'TATAINVEST', 'TCPLPACK',
+   'TATAPOWER', 'TATASTEEL', 'TCS', 'TECHM', 'TEGA',
+   'THEINVEST', 'THERMAX', 'TIMKEN', 'TITAN', 'TORNTPOWER',
+   'TRENT', 'TRITURBINE', 'TTKPRESTIG', 'TV18BRDCST', 'TVSMOTOR',
+   'UCOBANK', 'ULTRACEMCO', 'UNIONBANK', 'UNOMINDA', 'UPL',
+   'UJJIVANSFB', 'VAKRANGEE', 'VARROC', 'VEDL', 'VENKEYS',
+   'VGUARD', 'VIPIND', 'VOLTAMP', 'VSTIND',
+   'ZFCVINDIA', 'WALCHANNAG', 'WELCORP', 'WELSPUNLIV', 'WHIRLPOOL',
+   'WOCKPHARMA', 'YESBANK', 'ZEEL', 'ZENITHSTL-BE', 'ZENTEC',
+   # Nifty 50 stocks list
+   'ADANIPORTS', 'ASIANPAINT', 'AXISBANK', 'BAJAJ-AUTO', 'BAJFINANCE', 
+   'BAJAJFINSV', 'BPCL', 'BHARTIARTL', 'BRITANNIA', 'CIPLA', 
+   'COALINDIA', 'DIVISLAB', 'DRREDDY', 'EICHERMOT', 'GRASIM', 
+   'HCLTECH', 'HDFCBANK', 'HEROMOTOCO', 'HINDALCO', 
+   'HINDUNILVR', 'ICICIBANK', 'ITC', 'INDUSINDBK', 'INFY', 
+   'JSWSTEEL', 'KOTAKBANK', 'LT', 'M&M', 'MARUTI', 
+   'NESTLEIND', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 
+   'SBILIFE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATACONSUM', 
+   'TATAMOTORS', 'TATASTEEL', 'TECHM', 'TITAN', 'ULTRACEMCO', 
+   'UPL', 'WIPRO', 'NEULANDLAB', 'YATHARTH',
+   # Top 100 midcap stocks
+   'ADANIGREEN', 'ADANIPORTS', 'AJANTPHARM', 'ALKEM', 'AMBUJACEM', 
+   'APOLLOHOSP', 'ASHOKLEY', 'ASTRAL', 'ATUL', 'AVANTIFEED',
+   'BAJFINANCE', 'BAJAJHFL', 'BANKBARODA', 'BEL', 'BHARATFORG',
+   'BHARTIARTL', 'BIRLACORPN', 'ZYDUSLIFE', 'CANFINHOME', 'CEATLTD',
+   'CENTRALBK', 'CIPLA', 'COFORGE', 'COLPAL', 'CONCOR',
+   'CROMPTON', 'DABUR', 'DCMSHRIRAM', 'DEEPAKNTR', 'DIVISLAB',
+   'DIXON', 'DLF', 'EICHERMOT', 'ESCORTS', 'EXIDEIND',
+   'GAIL', 'GLAND', 'GLAXO', 'GMRINFRA', 'GRANULES',
+   'HAVELLS', 'HDFCLIFE', 'HINDCOPPER', 'HINDPETRO', 'HINDUNILVR',
+   'ICICIBANK', 'IGL', 'INDIGO', 'INDUSINDBK', 'INDUSTOWER',
+   'IRCTC', 'JINDALSTEL', 'JSL', 'KEC', 'KIRLOSENG',
+   'LTF', 'LT', 'LTIM', 'MOTHERSON', 'MUTHOOTFIN',
+   'NIITLTD', 'NOCIL', 'OIL', 'PERSISTENT', 'PIDILITIND',
+   'POLYCAB', 'PVRINOX', 'RAMCOCEM', 'RELIANCE', 'SAIL',
+   'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
+   'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
+   'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
+   'WIPRO', 'ZENSARTECH'  
 ]
 
 # Known market holidays for 2024 (example)
@@ -311,8 +311,11 @@ def print_5min_interval_data_for_high_growth_stocks(high_growth_stocks, specifie
                 print(f"No 5-minute data available for {symbol}.")
                 continue
             
-            # Calculate percentage changes and filter for positive changes >= 1%
+            # Calculate percentage changes for price and volume
             ohlc_data_5min['price_change'] = ohlc_data_5min['close'].pct_change() * 100
+            ohlc_data_5min['volume_change'] = ohlc_data_5min['volume'].pct_change() * 100
+            
+            # Filter for positive price changes >= 1%
             positive_changes = ohlc_data_5min[ohlc_data_5min['price_change'] >= 1]
 
             if positive_changes.empty:
@@ -321,7 +324,44 @@ def print_5min_interval_data_for_high_growth_stocks(high_growth_stocks, specifie
 
             print(f"\n5-Minute Interval Data with >= 1% Positive Change for {symbol} on {specified_date.date()}:")
             for index, change_row in positive_changes.iterrows():
-                print(f"Time: {index}, Change: {change_row['price_change']:.2f}%")
+                print(f"Time: {index}, Price Change: {change_row['price_change']:.2f}%, Volume Change: {change_row['volume_change']:.2f}%")
+
+        except Exception as e:
+            logging.error(f"Error fetching 5-minute data for {symbol}: {e}")
+            print(f"Error fetching data for {symbol}: {e}")
+
+def print_5min_v_interval_data_for_high_growth_stocks(high_growth_stocks, specified_date):
+    """Fetch and print 5-minute interval data for all high-growth stocks on a specified date
+    where the price change is greater than or equal to 1%."""
+    
+    start_time = specified_date.replace(hour=9, minute=15)  # Market opens at 9:15 AM
+    end_time = specified_date.replace(hour=15, minute=30)    # Market closes at 3:30 PM
+
+    # Iterate over the rows of the high_growth_stocks DataFrame
+    for _, row in high_growth_stocks.iterrows():
+        symbol = row['Symbol']  # Get the stock symbol
+        try:
+            # Fetch OHLC data for 5-minute intervals
+            ohlc_data_5min = fetch_ohlc(symbol, '5minute', start_time, end_time)
+
+            if ohlc_data_5min is None or ohlc_data_5min.empty:
+                print(f"No 5-minute data available for {symbol}.")
+                continue
+            
+            # Calculate percentage changes for price and volume
+            ohlc_data_5min['price_change'] = ohlc_data_5min['close'].pct_change() * 100
+            ohlc_data_5min['volume_change'] = ohlc_data_5min['volume'].pct_change() * 100
+            
+            # Filter for positive volume change >= 10%
+            positive_changes = ohlc_data_5min[ohlc_data_5min['volume_change'] >= 1000]
+
+            if positive_changes.empty:
+                print(f"No positive changes found for {symbol}.")
+                continue
+
+            print(f"\n5-Minute Interval Data with >= 1% Positive Change for {symbol} on {specified_date.date()}:")
+            for index, change_row in positive_changes.iterrows():
+                print(f"Time: {index}, Price Change: {change_row['price_change']:.2f}%, Volume Change: {change_row['volume_change']:.2f}%")
 
         except Exception as e:
             logging.error(f"Error fetching 5-minute data for {symbol}: {e}")
@@ -329,12 +369,107 @@ def print_5min_interval_data_for_high_growth_stocks(high_growth_stocks, specifie
 
 
 
+def print_5min_pv_interval_data_for_high_growth_stocks(high_growth_stocks, specified_date):
+    """Fetch and print 5-minute interval data for all high-growth stocks on a specified date
+    where the price change is greater than or equal to 1%."""
+    
+    start_time = specified_date.replace(hour=9, minute=15)  # Market opens at 9:15 AM
+    end_time = specified_date.replace(hour=15, minute=30)    # Market closes at 3:30 PM
+
+    # Iterate over the rows of the high_growth_stocks DataFrame
+    for _, row in high_growth_stocks.iterrows():
+        symbol = row['Symbol']  # Get the stock symbol
+        try:
+            # Fetch OHLC data for 5-minute intervals
+            ohlc_data_5min = fetch_ohlc(symbol, '5minute', start_time, end_time)
+
+            if ohlc_data_5min is None or ohlc_data_5min.empty:
+                print(f"No 5-minute data available for {symbol}.")
+                continue
+            
+            # Calculate percentage changes for price and volume
+            ohlc_data_5min['price_change'] = ohlc_data_5min['close'].pct_change() * 100
+            ohlc_data_5min['volume_change'] = ohlc_data_5min['volume'].pct_change() * 100
+            
+            # Filter for positive volume change >= 10%
+            positive_changes = ohlc_data_5min[(ohlc_data_5min['volume_change'] >= 1000) & (ohlc_data_5min['price_change'] >= 1)]
+
+            if positive_changes.empty:
+                print(f"No positive changes found for {symbol}.")
+                continue
+
+            print(f"\n5-Minute Interval Data with >= 1% Positive Change for {symbol} on {specified_date.date()}:")
+            for index, change_row in positive_changes.iterrows():
+                print(f"Time: {index}, Price Change: {change_row['price_change']:.2f}%, Volume Change: {change_row['volume_change']:.2f}%")
+
+        except Exception as e:
+            logging.error(f"Error fetching 5-minute data for {symbol}: {e}")
+            print(f"Error fetching data for {symbol}: {e}")
+
     # Example usage 
 start_date = dt.datetime(2024, 10, 10)  # Example start date
-specified_date = dt.datetime(2024, 10, 11, 15, 00)  # Example specified date with time
+specified_date = dt.datetime(2024, 10, 11)  # Example specified date with time
              
 
 print_high_growth_stocks(shares, start_date, specified_date)
 all_high_growth_stocks = high_growth_stocks  # Assuming high_growth_stocks is your full list
 
-print_5min_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+#print_5min_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+
+#print_5min_v_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+
+print_5min_pv_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+
+
+
+def calculate_vwap(data):
+    """Calculate the Volume Weighted Average Price (VWAP)."""
+    data['cum_volume'] = data['volume'].cumsum()
+    data['cum_value'] = (data['close'] * data['volume']).cumsum()
+    data['vwap'] = data['cum_value'] / data['cum_volume']
+    return data
+
+def fetch_historical_data(ticker, interval, start_date, end_date):
+    """Fetch historical data and calculate VWAP."""
+    instrument = kite.ltp(f"NSE:{ticker}")['NSE:' + ticker]['instrument_token']  # Get the instrument token
+    data = kite.historical_data(instrument, start_date, end_date, interval)
+    
+    df = pd.DataFrame(data)
+    df.set_index('date', inplace=True)
+
+    # Calculate VWAP
+    df = calculate_vwap(df)
+
+    return df[['close', 'volume', 'vwap']]
+
+
+def check_valid_ticker(ticker):
+    try:
+        ltp = kite.ltp(f"NSE:{ticker}")
+        return f"NSE:{ticker}" in ltp
+    except Exception as e:
+        print(f"Error checking LTP for {ticker}: {e}")
+        return False
+
+
+if __name__ == "__main__":
+    interval = "5minute"
+    start_date = dt.datetime(2024, 10, 10)  # Example start date
+    specified_date = dt.datetime(2024, 10, 11)  # Example specified date with time
+
+    # Loop through each stock and fetch VWAP data
+    for index, row in high_growth_stocks.iterrows():
+        ticker = row['Symbol']
+        if check_valid_ticker(ticker):  # Validate the ticker
+            try:
+                vwap_data = fetch_historical_data(ticker, interval, start_date, specified_date)
+                if vwap_data is not None:
+                    high_growth_stocks.at[index, 'VWAP Data'] = vwap_data  # Store VWAP data
+                    print(f"VWAP data for {ticker}:")
+                    print(vwap_data.head())  # Display the first few rows with VWAP
+                else:
+                    print(f"No VWAP data available for {ticker}.")
+            except Exception as e:
+                print(f"Error fetching data for {ticker}: {str(e)}")
+        else:
+            print(f"Invalid ticker: {ticker}")
