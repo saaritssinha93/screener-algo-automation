@@ -2,7 +2,7 @@
 
 body {
     font-family: Arial, sans-serif; /* Fallback font */
-    background-color: #fff3e0; /* Light cream color to complement orange */
+    background-color: #FAFAFA   ; /* Light cream color to complement orange */
     margin: 0;
     padding: 20px;
     position: relative; /* Position relative for absolute elements */
@@ -12,10 +12,10 @@ h1 {
     font-family: 'Montserrat', sans-serif; /* Use the Montserrat font */
     text-align: center; /* Center the heading */
     animation: colorChange 120s infinite; /* Change colors every 10 seconds */
-    font-size: 3rem; /* Increase font size for better visibility */
+    font-size: 2.5rem; /* Increase font size for better visibility */
     font-weight: 700; /* Use a bold weight for clarity */
     padding: 10px; /* Add padding around the text */
-    border: 5px solid transparent; /* Set initial border */
+    border: 3.5px solid transparent; /* Set initial border */
     border-radius: 10px; /* Rounded corners for the border */
     background-clip: text; /* Clip background to text */
     -webkit-background-clip: text; /* For Safari compatibility */
@@ -152,7 +152,7 @@ h1::before {
 
 button {
     background-color: #fff; /* White background for the button */
-    color: orange; /* Orange text color */
+    color: rgb(32, 4, 58); /* Orange text color */
     border: 3px solid orange; /* Initial orange border for the button */
     padding: 20px 40px; /* Increased padding for a larger button */
     font-size: 24px; /* Increased font size for better visibility */
@@ -195,4 +195,34 @@ button:active {
 
 a {
     text-decoration: none; /* Remove underline from link */
+}
+/* Media Queries for Mobile Compatibility */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem; /* Smaller font size for mobile */
+    }
+
+    button {
+        font-size: 18px; /* Smaller font size for buttons */
+        padding: 15px; /* Reduced padding for mobile */
+        flex: 1 1 calc(100% - 20px); /* Full width buttons with space around */
+    }
+
+    .button-container {
+        text-align: center; /* Center buttons on mobile */
+    }
+
+    .button-row {
+        justify-content: center; /* Center button row on mobile */
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem; /* Even smaller font size for very small screens */
+    }
+
+    button {
+        font-size: 16px; /* Further reduced button font size */
+    }
 }

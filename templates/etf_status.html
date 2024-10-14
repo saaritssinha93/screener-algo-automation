@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF Status</title>
+</head>
+<body>
+    <h1>ETFs UP/DOWN</h1>
+    {% if etf_status_data %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ETF Name</th>
+                    <th>Current Price</th>
+                    <th>1-Day Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for etf in etf_status_data %}
+                <tr>
+                    <td>{{ etf.name }}</td>
+                    <td>{{ etf.current_price }}</td>
+                    <td>{{ etf.one_day_change }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No ETFs are UP/DOWN by 2% today.</p>
+    {% endif %}
+</body>
+</html>

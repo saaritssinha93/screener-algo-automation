@@ -2,11 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ETF List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETF Data</title>
 </head>
 <body>
-    <h1>ETF List</h1>
+    <h1>ETF Data</h1>
     <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Current Price</th>
+            <th>Historical Prices</th>
+            <th>Percentage Changes</th>
+            <th>1-Day Change</th>
+            <th>5-Day Change</th>
+            <th>1-Month Change</th>
+        </tr>
         {% for etf in etf_data %}
         <tr>
             <td>{{ etf.name }}</td>
@@ -19,10 +29,6 @@
         </tr>
         {% endfor %}
     </table>
-    
-    <div>
-        <a href="{{ url_for('etf_data') }}"><button>ETF Data</button></a>
-        <a href="{{ url_for('etf_status') }}"><button>ETF Status</button></a>
-    </div>
+    <a href="{{ url_for('etf_list') }}">Back to ETF List</a>
 </body>
 </html>
