@@ -299,7 +299,22 @@ def print_high_growth_stocks():
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
 
+def run_every_30mins(shares):
+    """Run the price comparison and high-growth stock functions every 30 minutes."""
+    
+    while True:
+        # Perform actions for each share
+        for share in shares:
+            print_price_comparison(share)
 
+        # Print high-growth stocks
+        print_high_growth_stocks()
+
+        # Log or print the time of execution
+        print(f"Data fetched and printed at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+        # Wait for 30 minutes (1800 seconds) before the next run
+        time.sleep(1800)  # 1800 seconds = 30 minutes
 
 
 
@@ -357,31 +372,47 @@ def paper_trade(stocks, investment_per_stock=50000, target=0.02, stop_loss=0.015
 
 
 
-def fetch_5min_intervals_for_high_growth_stocks(growth_stocks, start_date, end_date, threshold=2, verbose=True):
-    """Fetch 5-minute interval data for high-growth stocks without printing if verbose is set to False."""
-    logging.info(f"Scanning 5-minute data for high-growth stocks from {start_date} to {end_date}.")
+from datetime import datetime, timedelta
+
+def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verbose=True):
+    """Fetch 3-minute interval data for high-growth stocks for today's date, handle errors, and check data availability."""
     
+    # Get today's date
+    today = datetime.now()
+    
+    # Set the market start and end time for today
+    start_date = today.replace(hour=9, minute=15, second=0, microsecond=0)
+    end_date = today.replace(hour=15, minute=30, second=0, microsecond=0)
+
+    logging.info(f"Scanning 5-minute data for high-growth stocks on {today.date()}.")
+
     for symbol in growth_stocks:
         try:
             # Fetch OHLC data for 5-minute intervals
-            ohlc_data_5min = fetch_ohlc(symbol, '5minute', start_date, end_date)
+            ohlc_data_3min = fetch_ohlc(symbol, '3minute', start_date, end_date)
 
-            if ohlc_data_5min is None or ohlc_data_5min.empty:
-                logging.error(f"No 5-minute data available for {symbol}.")
+            if ohlc_data_3min is None or ohlc_data_3min.empty:
+                logging.warning(f"No 3-minute data available for {symbol}. Skipping.")
                 continue
 
             # Calculate the percentage price changes between consecutive intervals
-            ohlc_data_5min = get_price_changes(ohlc_data_5min)
+            ohlc_data_3min = get_price_changes(ohlc_data_3min)
 
             # Filter for intervals with a positive price change greater than the threshold
-            significant_changes = ohlc_data_5min[ohlc_data_5min['price_change'] > threshold]
+            significant_changes = ohlc_data_3min[ohlc_data_3min['price_change'] > threshold]
 
             if verbose and not significant_changes.empty:
-                print(f"\nSignificant positive price changes (> {threshold}% change) for {symbol}:")
+                print(f"\nSignificant positive price changes (> {threshold}% change) for {symbol} on {today.date()}:")
                 print(significant_changes[['close', 'price_change']])
 
+        except KeyError as e:
+            logging.error(f"Symbol error for {symbol}: {e}")
+            print(f"Error with symbol {symbol}: {e}")
         except Exception as e:
-            logging.error(f"Error fetching 5-minute data for {symbol}: {e}")
+            logging.error(f"Error fetching 3-minute data for {symbol}: {e}")
+            print(f"Error fetching data for {symbol}: {e}")
+
+
 
 
 
@@ -398,6 +429,26 @@ def get_price_changes(df):
     return df
 
 
+
+import time
+import datetime as dt
+
+def fetch_3min_intervals_for_high_growth_stocks_periodically(growth_stocks, threshold=1):
+    """Fetch updated 3-minute interval data for high-growth stocks every 3 minutes."""
+    
+    while True:
+        # Get the current time and set the start and end times for the latest 3-minute window
+        end_time = dt.datetime.now()
+        start_time = end_time - dt.timedelta(minutes=3)
+
+        # Fetch the updated 3-minute interval data
+        fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=1)
+
+        # Log or print the time of execution
+        print(f"Fetched data for the 3-minute interval from {start_time} to {end_time}.")
+
+        # Wait for 3 minutes before running the next scan
+        time.sleep(180)  # 180 seconds = 3 minutes
 
 
 
@@ -424,9 +475,10 @@ print(trade_results)
 # Example usage: Get all high-growth stocks (instead of only top 3)
 all_high_growth_stocks = high_growth_stocks  # Assuming high_growth_stocks is your full list
 
-# Example usage: Scan 5-minute intervals for all high-growth stocks
-start_date = dt.datetime(2024, 10, 10)
-end_date = dt.datetime(2024, 10, 11)
+# Example usage: Scan 3-minute intervals for all high-growth stocks
+start_date = dt.datetime(2024, 10, 11, 15, 30)
+end_date = dt.datetime(2024, 10, 14)
 
-# Scan 5-minute intervals for all the high-growth stocks
-fetch_5min_intervals_for_high_growth_stocks(all_high_growth_stocks, start_date, end_date, threshold=1)
+# Example usage
+if __name__ == "__main__":
+    fetch_3min_intervals_for_high_growth_stocks_periodically(all_high_growth_stocks, threshold=1)
