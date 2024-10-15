@@ -275,7 +275,7 @@ def print_price_comparison(symbol):
                         print(f"{symbol}: Price +{percent_change:.2f}%, Volume Change: N/A")
                 # If price change < 2%, minimal output
                 else:
-                    print(f"{symbol}: Price Change: +{percent_change:.2f}%")
+                    print(f"{symbol}: Price Change: {percent_change:.2f}%")
             else:
                 print(f"Error: Live price not available for {symbol}")
         else:
@@ -411,16 +411,6 @@ def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verb
         except Exception as e:
             logging.error(f"Error fetching 3-minute data for {symbol}: {e}")
             print(f"Error fetching data for {symbol}: {e}")
-
-
-
-
-
-
-
-
-
-
 
 # Function to calculate percentage change between consecutive intervals
 def get_price_changes(df):
