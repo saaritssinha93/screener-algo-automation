@@ -253,25 +253,27 @@ def calculate_etf_metrics(symbol):
     return (symbol, None, None)  # In case of issues, return None
 
 def run_etf_analysis_every_30mins(shares):
-    """Run the ETF analysis every 30 minutes starting at 9:15 AM."""
+    """Run the ETF analysis every 30 minutes starting at 9:15 AM or immediately if after 9:15 AM."""
 
     # Define the first run time at 9:15 AM
     now = datetime.now()
     first_run_time = now.replace(hour=9, minute=15, second=0, microsecond=0)
 
-    # If the current time is past 9:15 AM today, schedule for 9:15 AM the next day
+    # If the current time is past 9:15 AM today, start immediately
     if now > first_run_time:
-        first_run_time += timedelta(days=1)
-
-    # Wait until 9:15 AM to start
-    wait_time = (first_run_time - now).total_seconds()
-    print(f"Waiting until {first_run_time} to start...")
-    time.sleep(wait_time)
+        print("It's past 9:15 AM, starting immediately...")
+        first_run_time = now  # Start right away
+    else:
+        # Wait until 9:15 AM to start
+        wait_time = (first_run_time - now).total_seconds()
+        print(f"Waiting until {first_run_time} to start...")
+        time.sleep(wait_time)
 
     # Start the loop to run every 30 minutes
     while True:
         etf_metrics = []
         
+        # Perform the ETF analysis
         for share in shares:
             metrics = calculate_etf_metrics(share)
             if metrics and metrics[2] is not None:  # Ensure percent_change is not None

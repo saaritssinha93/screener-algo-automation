@@ -124,7 +124,8 @@ shares = [
    'SBIN', 'SBICARD', 'SHREECEM', 'SRF', 'SUDARSCHEM',
    'SUNPHARMA', 'TATAELXSI', 'TECHM', 'TITAN', 'TORNTPHARM',
    'TRIDENT', 'ULTRACEMCO', 'UNIONBANK', 'UPL', 'VOLTAS',
-   'WIPRO', 'ZENSARTECH'  
+   'WIPRO', 'ZENSARTECH'
+      
 ]
 
 # Known market holidays for 2024 (example)
@@ -440,35 +441,82 @@ def fetch_3min_intervals_for_high_growth_stocks_periodically(growth_stocks, thre
         # Wait for 3 minutes before running the next scan
         time.sleep(180)  # 180 seconds = 3 minutes
 
+import tkinter as tk
+from tkinter import scrolledtext
+import threading
+import time
+
+# Function to print high-growth stocks in a new window
+def print_high_growth_stocks_in_window():
+    """Creates a new window to display high-growth stocks."""
+    window = tk.Tk()
+    window.title("High-Growth Stocks")
+
+    text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=50, height=20)
+    text_area.pack(padx=10, pady=10)
+
+    if high_growth_stocks:
+        sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
+        for stock, (percent, volume_change) in sorted_stocks:
+            text_area.insert(tk.END, f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%\n")
+    else:
+        text_area.insert(tk.END, "No stocks have increased by 2% or more.\n")
+
+    window.mainloop()
+
+# Function to simulate stock selection and paper trading
+def run_trading_tasks():
+    """Simulates the stock selection and trading tasks."""
+    time.sleep(2)  # Simulate delay
+    
+    # Get top 3 high growth stocks
+    print("Selecting top 3 high growth stocks...")
+    top_stocks = select_top_growth_stocks(high_growth_stocks)
+    
+    # Perform paper trading on top stocks
+    print("Performing paper trading on top stocks...")
+    trade_results = paper_trade(top_stocks)
+    
+    # Print trade results
+    print(trade_results)
+
+    # Example usage: Get all high-growth stocks
+    all_high_growth_stocks = high_growth_stocks
+
+    # Scan 3-minute intervals for all high-growth stocks
+    print("Fetching 3-minute intervals for all high-growth stocks...")
+    fetch_3min_intervals_for_high_growth_stocks(all_high_growth_stocks, threshold=1)
+
+# Function to run tasks in the background
+def run_background_tasks():
+    """Run background tasks like stock analysis and paper trading."""
+    run_trading_tasks()
+
+# Start the tkinter window in the main thread
+def start_ui():
+    """Start the tkinter window in the main thread."""
+    print_high_growth_stocks_in_window()
+
+# Run Tkinter window and background task concurrently
+def run_program():
+    # Start the output window in a separate thread
+    output_thread = threading.Thread(target=start_ui)
+    output_thread.start()
+
+    # Background task to run simultaneously
+    """Start background tasks in a separate thread."""
+    background_thread = threading.Thread(target=run_background_tasks)
+    background_thread.daemon = True  # Daemon so it doesn't block exiting
+    background_thread.start()
 
 
 
-
-# Call your functions manually instead of using a scheduler
-# Example usage
-for share in shares:
-    print_price_comparison(share)
-
-print_high_growth_stocks()
-
-
-# Get top 3 high growth stocks
-top_stocks = select_top_growth_stocks(high_growth_stocks)
-
-# Perform paper trading on top stocks
-trade_results = paper_trade(top_stocks)
-
-# Print the results
-print(trade_results)
-
-
-# Example usage: Get all high-growth stocks (instead of only top 3)
-all_high_growth_stocks = high_growth_stocks  # Assuming high_growth_stocks is your full list
-
-# Example usage: Scan 3-minute intervals for all high-growth stocks
-start_date = dt.datetime(2024, 10, 11, 15, 30)
-end_date = dt.datetime(2024, 10, 14)
-
-# Example usage
 if __name__ == "__main__":
-    fetch_3min_intervals_for_high_growth_stocks_periodically(all_high_growth_stocks, threshold=1)
+    for _ in range(22000):  # Run twice
+        for share in shares:
+            print_price_comparison(share)
+
+        print_high_growth_stocks()
+        # Run tkinter window and background tasks
+        run_program()
+    
