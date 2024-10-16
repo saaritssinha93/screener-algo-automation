@@ -9,6 +9,7 @@ import os
 import datetime as dt
 import pandas as pd
 import time
+from datetime import datetime, timedelta
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -224,7 +225,6 @@ def print_price_comparison(symbol):
                     print(f"{symbol}: Last Close: {last_close}, Current Price: {live_price}, Percentage Change: {percent_change:.2f}%")
 
 # Function to calculate metrics for each ETF
-# Function to calculate metrics for each ETF
 def calculate_etf_metrics(symbol):
     """Calculates and prints metrics for a given ETF."""
     last_trading_day = get_last_trading_day()
@@ -252,32 +252,38 @@ def calculate_etf_metrics(symbol):
 
     return (symbol, None, None)  # In case of issues, return None
 
-# Collect metrics for all shares
-etf_metrics = []
-for share in shares:
-    metrics = calculate_etf_metrics(share)
-    if metrics and metrics[2] is not None:  # Ensure percent_change is not None
-        etf_metrics.append(metrics)
+def run_etf_analysis_every_30mins(shares):
+    """Run the ETF analysis every 30 minutes starting at 9:15 AM."""
 
-# Run analysis every 30 minutes
-while True:
-    try:
-        # Collect metrics for all shares
+    # Define the first run time at 9:15 AM
+    now = datetime.now()
+    first_run_time = now.replace(hour=9, minute=15, second=0, microsecond=0)
+
+    # If the current time is past 9:15 AM today, schedule for 9:15 AM the next day
+    if now > first_run_time:
+        first_run_time += timedelta(days=1)
+
+    # Wait until 9:15 AM to start
+    wait_time = (first_run_time - now).total_seconds()
+    print(f"Waiting until {first_run_time} to start...")
+    time.sleep(wait_time)
+
+    # Start the loop to run every 30 minutes
+    while True:
         etf_metrics = []
+        
         for share in shares:
             metrics = calculate_etf_metrics(share)
             if metrics and metrics[2] is not None:  # Ensure percent_change is not None
                 etf_metrics.append(metrics)
 
         # Rank the ETFs based on % Change in ascending order
-        ranked_etfs = sorted(etf_metrics, key=lambda x: x[2] if x[2] is not None else float('inf'))  # All ETFs sorted in ascending order
+        ranked_etfs = sorted(etf_metrics, key=lambda x: x[2] if x[2] is not None else float('inf'))
         bottom_ten_etfs = ranked_etfs[:10]  # Bottom 10 based on % Change
 
         # Prepare data for CSV
-        ranked_data = []
-        for rank, (symbol, diff, percent_change) in enumerate(bottom_ten_etfs, start=1):
-            if percent_change is not None:
-                ranked_data.append({"Rank": rank, "Symbol": symbol, "% Change": f"{percent_change:.2f}%"})
+        ranked_data = [{"Rank": rank, "Symbol": symbol, "% Change": f"{percent_change:.2f}%"} 
+                       for rank, (symbol, diff, percent_change) in enumerate(bottom_ten_etfs, start=1)]
 
         # Create a DataFrame and save it to CSV
         ranked_df = pd.DataFrame(ranked_data)
@@ -288,9 +294,11 @@ while True:
         print(ranked_df)
 
         # Wait for 30 minutes before the next iteration
-        time.sleep(1800)
-
-    except Exception as e:
-        logging.error(f"Error during execution: {e}")
-        # Wait for 30 minutes even if there's an error
-        time.sleep(1800)
+        print(f"Next run at {datetime.now() + timedelta(minutes=30)}")
+        time.sleep(1800)  # 1800 seconds = 30 minutes
+        
+        
+        
+# Example usage
+if __name__ == "__main__":
+            run_etf_analysis_every_30mins(shares)

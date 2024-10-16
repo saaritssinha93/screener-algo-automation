@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Oct  7 16:48:37 2024
-
-@author: Saarit
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Zerodha kiteconnect automated authentication for fetching 5-minute interval historical data for today.
 """
 
