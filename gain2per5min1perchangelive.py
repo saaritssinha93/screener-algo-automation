@@ -285,17 +285,26 @@ def print_price_comparison(symbol):
         print(f"Error: Historical data not available for {symbol}")
 
 
-# Modified function to print the high growth stocks, sorted in descending order
+# Modified function to print high growth stocks and save to CSV
 def print_high_growth_stocks():
-    """Prints the stocks with a growth of 2% or more along with volume change, sorted by percent growth in descending order."""
+    """Prints the stocks with a growth of 2% or more along with volume change, 
+    sorted by percent growth in descending order, and saves to a CSV file."""
     logging.info("Stocks with 2% or more increase:")
 
     if high_growth_stocks:
         # Sort the high_growth_stocks dictionary by the percent change in descending order
         sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
         
+        # Prepare data for CSV
+        ranked_data = []
         for stock, (percent, volume_change) in sorted_stocks:
+            ranked_data.append({"Stock": stock, "Percent Change": f"{percent:.2f}%", "Volume Change": f"{volume_change:.2f}%"})
             print(f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%")
+        
+        # Create a DataFrame and save it to CSV
+        ranked_df = pd.DataFrame(ranked_data)
+        ranked_df.to_csv("high_growth_stocks.csv", index=False)
+
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
@@ -371,12 +380,37 @@ def paper_trade(stocks, investment_per_stock=50000, target=0.02, stop_loss=0.015
 
     return pd.DataFrame(results, columns=["Stock", "Investment", "Buy Price", "Shares Bought", "Target", "Stop Loss", "Status"])
 
-
+import tkinter as tk
+from tkinter import scrolledtext
+import threading
+import time
 
 from datetime import datetime, timedelta
 
+def show_significant_changes_popup(changes):
+    """Creates a popup window to display significant price changes."""
+    window = tk.Tk()
+    window.title("Significant Price Changes")
+
+    text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=100, height=40)
+    text_area.pack(padx=10, pady=10)
+
+    if changes:
+        for change in changes:
+            text_area.insert(tk.END, f"Symbol: {change['Symbol']}, Time: {change['Time']}, "
+                                       f"Close: {change['Close']}, Price Change: {change['Price Change']:.2f}%\n")
+    else:
+        text_area.insert(tk.END, "No significant price changes found.\n")
+
+    # Automatically close the window after 120 seconds
+    window.after(120000, window.destroy)  # 120000 milliseconds = 120 seconds
+
+    window.mainloop()
+
+# Updated fetch function to call the popup window
 def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verbose=True):
-    """Fetch 3-minute interval data for high-growth stocks for today's date, handle errors, and check data availability."""
+    """Fetch 3-minute interval data for high-growth stocks for today's date, 
+    handle errors, and check data availability."""
     
     # Get today's date
     today = datetime.now()
@@ -385,11 +419,14 @@ def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verb
     start_date = today.replace(hour=9, minute=15, second=0, microsecond=0)
     end_date = today.replace(hour=15, minute=30, second=0, microsecond=0)
 
-    logging.info(f"Scanning 5-minute data for high-growth stocks on {today.date()}.")
+    logging.info(f"Scanning 3-minute data for high-growth stocks on {today.date()}.")
+
+    # Prepare to collect significant changes for CSV
+    all_significant_changes = []
 
     for symbol in growth_stocks:
         try:
-            # Fetch OHLC data for 5-minute intervals
+            # Fetch OHLC data for 3-minute intervals
             ohlc_data_3min = fetch_ohlc(symbol, '3minute', start_date, end_date)
 
             if ohlc_data_3min is None or ohlc_data_3min.empty:
@@ -402,9 +439,19 @@ def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verb
             # Filter for intervals with a positive price change greater than the threshold
             significant_changes = ohlc_data_3min[ohlc_data_3min['price_change'] > threshold]
 
-            if verbose and not significant_changes.empty:
-                print(f"\nSignificant positive price changes (> {threshold}% change) for {symbol} on {today.date()}:")
-                print(significant_changes[['close', 'price_change']])
+            if not significant_changes.empty:
+                if verbose:
+                    print(f"\nSignificant positive price changes (> {threshold}% change) for {symbol} on {today.date()}:")
+                    print(significant_changes[['close', 'price_change']])
+
+                # Append significant changes to the list for CSV output
+                for index, row in significant_changes.iterrows():
+                    all_significant_changes.append({
+                        "Symbol": symbol,
+                        "Time": index,
+                        "Close": row['close'],
+                        "Price Change": row['price_change']
+                    })
 
         except KeyError as e:
             logging.error(f"Symbol error for {symbol}: {e}")
@@ -412,6 +459,17 @@ def fetch_3min_intervals_for_high_growth_stocks(growth_stocks, threshold=2, verb
         except Exception as e:
             logging.error(f"Error fetching 3-minute data for {symbol}: {e}")
             print(f"Error fetching data for {symbol}: {e}")
+
+    # Save all significant changes to a CSV file if there are any
+    if all_significant_changes:
+        changes_df = pd.DataFrame(all_significant_changes)
+        changes_df.to_csv("significant_price_changes.csv", index=False)
+        print(f"Significant price changes saved to significant_price_changes.csv")
+        
+        # Show significant changes in a popup window
+        show_significant_changes_popup(all_significant_changes)
+    else:
+        print("No significant price changes found for any stocks.")
 
 # Function to calculate percentage change between consecutive intervals
 def get_price_changes(df):
@@ -441,10 +499,7 @@ def fetch_3min_intervals_for_high_growth_stocks_periodically(growth_stocks, thre
         # Wait for 3 minutes before running the next scan
         time.sleep(180)  # 180 seconds = 3 minutes
 
-import tkinter as tk
-from tkinter import scrolledtext
-import threading
-import time
+
 
 # Function to print high-growth stocks in a new window
 def print_high_growth_stocks_in_window():
@@ -452,15 +507,23 @@ def print_high_growth_stocks_in_window():
     window = tk.Tk()
     window.title("High-Growth Stocks")
 
-    text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=50, height=20)
+    text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=100, height=40)
     text_area.pack(padx=10, pady=10)
 
+    # Display high-growth stocks
     if high_growth_stocks:
         sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
         for stock, (percent, volume_change) in sorted_stocks:
             text_area.insert(tk.END, f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%\n")
     else:
         text_area.insert(tk.END, "No stocks have increased by 2% or more.\n")
+
+    # Function to close the window
+    def close_window():
+        window.destroy()
+
+    # Schedule the close_window function to run after 120 seconds
+    window.after(120000, close_window)  # 120000 milliseconds = 120 seconds
 
     window.mainloop()
 
