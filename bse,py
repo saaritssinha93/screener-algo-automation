@@ -1,0 +1,158 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct 17 18:47:06 2024
+
+@author: Saarit
+"""
+
+from kiteconnect import KiteConnect
+import pandas as pd
+import os
+import time
+from kiteconnect import KiteConnect
+import logging
+import datetime as dt
+import pandas as pd
+import numpy as np
+import sys
+
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+# Define the correct path
+cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
+os.chdir(cwd)
+
+
+# Known market holidays for 2024 (example)
+market_holidays = [
+    dt.date(2024, 10, 2),  # Gandhi Jayanti
+    # Add other known holidays for the year here
+]
+
+# Generate trading session
+try:
+    with open("access_token.txt", 'r') as token_file:
+        access_token = token_file.read().strip()
+
+    with open("api_key.txt", 'r') as key_file:
+        key_secret = key_file.read().split()
+
+    kite = KiteConnect(api_key=key_secret[0])
+    kite.set_access_token(access_token)
+    logging.info("Kite session established successfully.")
+
+except FileNotFoundError as e:
+    logging.error(f"File not found: {e}")
+    raise
+except Exception as e:
+    logging.error(f"Error setting up Kite session: {e}")
+    raise
+# Fetch all instruments
+all_instruments = kite.instruments()
+
+# Convert to DataFrame for easier filtering
+instruments_df = pd.DataFrame(all_instruments)
+
+# Filter for BSE instruments only
+bse_instruments = instruments_df[instruments_df['exchange'] == 'BSE']
+
+# Optional: If you want to exclude instruments also listed on NSE
+# You can filter out the ones in the NSE exchange
+nse_symbols = set(instruments_df[instruments_df['exchange'] == 'NSE']['tradingsymbol'])
+bse_only_instruments = bse_instruments[~bse_instruments['tradingsymbol'].isin(nse_symbols)]
+
+# Save or view BSE-only instruments
+print(bse_only_instruments[['tradingsymbol', 'name']])
+
+
+from kiteconnect import KiteConnect
+import pandas as pd
+import datetime
+import tkinter as tk
+from tkinter import messagebox
+
+# Initialize Kite Connect API
+kite = KiteConnect(api_key="your_api_key")
+kite.set_access_token("your_access_token")
+
+# Function to fetch live price for multiple stocks
+def fetch_live_prices(instrument_tokens):
+    live_data = kite.ltp(instrument_tokens)
+    return live_data
+
+# Function to filter stocks with 2% growth from last day’s closing price
+def filter_growth_stocks(bse_instruments):
+    growth_stocks = []
+    for index, stock in bse_instruments.iterrows():
+        instrument_token = stock['instrument_token']
+        name = stock['tradingsymbol']
+        
+        # Fetch live price data
+        live_price_data = fetch_live_prices([instrument_token])
+        live_price = live_price_data[str(instrument_token)]['last_price']
+        
+        # Fetch previous day closing price
+        previous_close = live_price_data[str(instrument_token)]['ohlc']['close']
+        
+        # Calculate the price difference percentage
+        price_diff = ((live_price - previous_close) / previous_close) * 100
+        
+        # Filter stocks with at least 2% growth
+        if price_diff >= 2:
+            stock['live_price'] = live_price
+            stock['previous_close'] = previous_close
+            stock['growth_percentage'] = price_diff
+            growth_stocks.append(stock)
+    
+    return pd.DataFrame(growth_stocks)
+
+# Function to check if stock has broken one-month high
+def check_one_month_high(stock, start_date, end_date):
+    historical_data = kite.historical_data(stock['instrument_token'], start_date, end_date, "day")
+    hist_df = pd.DataFrame(historical_data)
+    
+    # Calculate the one-month high
+    one_month_high = hist_df['high'].max()
+    
+    # Check if the live price has broken the one-month high
+    return stock['live_price'] > one_month_high
+
+# Main function to filter high growth stocks
+def get_high_growth_stocks(bse_instruments):
+    # Filter stocks with 2% growth
+    growth_stocks = filter_growth_stocks(bse_instruments)
+    
+    # Get date range for last one month
+    end_date = datetime.date.today()
+    start_date = end_date - datetime.timedelta(days=30)
+    
+    selected_stocks = []
+    
+    for index, stock in growth_stocks.iterrows():
+        if check_one_month_high(stock, start_date, end_date):
+            selected_stocks.append(stock)
+    
+    return pd.DataFrame(selected_stocks)
+
+# Function to save the selected stocks to CSV and display in popup
+def save_and_display(selected_stocks):
+    # Save to CSV
+    selected_stocks.to_csv("selected_stocks.csv", index=False)
+    
+    # Print selected stocks
+    print(selected_stocks[['tradingsymbol', 'live_price', 'growth_percentage']])
+    
+    # Display in popup window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+    msg = selected_stocks[['tradingsymbol', 'live_price', 'growth_percentage']].to_string(index=False)
+    messagebox.showinfo("Selected Stocks", msg)
+
+
+# Get selected stocks based on criteria
+selected_stocks = get_high_growth_stocks(bse_instruments)
+
+# Save and display the selected stocks
+save_and_display(selected_stocks)

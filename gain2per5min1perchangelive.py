@@ -542,7 +542,7 @@ def run_trading_tasks():
     
     # Print trade results
     print(trade_results)
-
+  
     # Example usage: Get all high-growth stocks
     all_high_growth_stocks = high_growth_stocks
 
