@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Created on Fri Oct 18 09:27:18 2024
+
+@author: Saarit
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Fri Oct 11 17:41:53 2024
 
 @author: Saarit
@@ -407,18 +414,18 @@ def print_5min_pv_interval_data_for_high_growth_stocks(high_growth_stocks, speci
             print(f"Error fetching data for {symbol}: {e}")
 
     # Example usage 
-start_date = dt.datetime(2024, 10, 15)  # Example start date
-specified_date = dt.datetime(2024, 10, 16, 15, 30)  # Example specified date with time
+start_date = dt.datetime(2024, 10, 16)  # Example start date
+specified_date = dt.datetime(2024, 10, 17, 15, 30)  # Example specified date with time
              
 
 print_high_growth_stocks(shares, start_date, specified_date)
 all_high_growth_stocks = high_growth_stocks  # Assuming high_growth_stocks is your full list
 
-#print_5min_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+print_5min_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
 
 #print_5min_v_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
 
-print_5min_pv_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
+#print_5min_pv_interval_data_for_high_growth_stocks(all_high_growth_stocks, specified_date)
 
 
 
