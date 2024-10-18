@@ -468,8 +468,12 @@ def calculate_rsi(data, period=14):
     gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
 
+    # Average gain
+    avgGain = gain.ewm(alpha=1/period, min_periods=period).mean()
+    
+    avgLoss = loss.ewm(alpha=1/period, min_periods=period).mean()
     # Avoid division by zero for RS calculation
-    rs = gain / loss.replace(0, np.nan)
+    rs = avgGain / avgLoss.replace(0, np.nan)
     
     # Calculate RSI
     rsi = 100 - (100 / (1 + rs))
