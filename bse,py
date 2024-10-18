@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct 17 18:47:06 2024
-
-@author: Saarit
+Zerodha kiteconnect automated authentication without a scheduler.
 """
 
-from kiteconnect import KiteConnect
-import pandas as pd
-import os
 import time
 from kiteconnect import KiteConnect
 import logging
+import os
 import datetime as dt
 import pandas as pd
 import numpy as np
@@ -23,7 +19,6 @@ logging.basicConfig(level=logging.INFO)
 # Define the correct path
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
-
 
 # Known market holidays for 2024 (example)
 market_holidays = [
@@ -49,6 +44,17 @@ except FileNotFoundError as e:
 except Exception as e:
     logging.error(f"Error setting up Kite session: {e}")
     raise
+
+# Get dump of all NSE instruments
+try:
+    instrument_dump = kite.instruments("NSE")
+    instrument_df = pd.DataFrame(instrument_dump)
+    logging.info("NSE instrument data fetched successfully.")
+    
+except Exception as e:
+    logging.error(f"Error fetching instruments: {e}")
+    raise
+
 # Fetch all instruments
 all_instruments = kite.instruments()
 
