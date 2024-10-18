@@ -548,7 +548,7 @@ def run_trading_tasks():
 
     # Scan 3-minute intervals for all high-growth stocks
     print("Fetching 3-minute intervals for all high-growth stocks...")
-    fetch_3min_intervals_for_high_growth_stocks(all_high_growth_stocks, threshold=1)
+    fetch_3min_intervals_for_high_growth_stocks(all_high_growth_stocks, threshold=0.75)
 
 # Function to run tasks in the background
 def run_background_tasks():
