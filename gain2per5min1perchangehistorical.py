@@ -414,8 +414,8 @@ def print_5min_pv_interval_data_for_high_growth_stocks(high_growth_stocks, speci
             print(f"Error fetching data for {symbol}: {e}")
 
     # Example usage 
-start_date = dt.datetime(2024, 10, 16)  # Example start date
-specified_date = dt.datetime(2024, 10, 17, 15, 30)  # Example specified date with time
+start_date = dt.datetime(2024, 10, 17)  # Example start date
+specified_date = dt.datetime(2024, 10, 18, 15, 30)  # Example specified date with time
              
 
 print_high_growth_stocks(shares, start_date, specified_date)
