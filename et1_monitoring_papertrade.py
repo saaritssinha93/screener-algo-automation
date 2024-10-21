@@ -85,7 +85,6 @@ def fetch_current_price(ticker, kite, instrument_df):
         logging.error(f"Error fetching live price for {ticker}: {e}")
         return None
 
-
 def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target_percentage=2.0, sl_percentage=1.5, check_interval=60):
     """
     Monitor the paper trades for target and stop-loss conditions.
@@ -102,6 +101,10 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
     try:
         # Read the paper trades
         paper_trades = pd.read_csv(file_path)
+        
+        # Initialize active_trades from paper_trades
+        active_trades = paper_trades.copy()
+        
     except FileNotFoundError as e:
         print(f"File {file_path} not found: {e}")
         return
@@ -109,17 +112,13 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
         print(f"Error reading {file_path}: {e}")
         return
 
-    # Keep a list of active trades
-    active_trades = paper_trades.copy()
+    if active_trades.empty:
+        print("No active trades found.")
+        return
 
-    # Initialize or create the results file
-    results_file = 'papertrade_result.csv'
-    if not os.path.exists(results_file):
-        with open(results_file, 'w') as f:
-            f.write('Ticker,Sell Price,Quantity Sold,Total Value Sold,Profit,Loss,Time\n')  # Write header
+    sold_trades = pd.DataFrame(columns=['Ticker', 'Sell Price', 'Quantity Sold', 'Total Value Sold', 'Profit', 'Loss', 'Time'])
 
     while not active_trades.empty:
-        # Check current time
         current_time = datetime.now()
 
         for index, row in active_trades.iterrows():
@@ -128,15 +127,9 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
             quantity = row['Quantity']
             total_value_bought = row['Total Value Bought']
 
-            # Fetch the current price of the ticker
             current_price = fetch_current_price(ticker, kite, instrument_df)
-
-            # Calculate target and stop-loss prices
             target_price = buy_price * (1 + target_percentage / 100)
             sl_price = buy_price * (1 - sl_percentage / 100)
-
-            # Print current status
-            print(f"Monitoring {ticker}: Current Price = ₹{current_price}, Target Price = ₹{target_price}, Stop-Loss Price = ₹{sl_price}")
 
             # Check for target hit
             if current_price >= target_price:
@@ -144,11 +137,16 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
                 profit = total_value_sold - total_value_bought
                 print(f"Target hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, Profit: ₹{profit}")
 
-                # Append the result to the results file
-                with open(results_file, 'a') as f:
-                    f.write(f"{ticker},{current_price},{quantity},{total_value_sold},{profit},, {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                new_trade = pd.DataFrame({
+                    'Ticker': [ticker], 'Sell Price': [current_price], 'Quantity Sold': [quantity],
+                    'Total Value Sold': [total_value_sold], 'Profit': [profit], 'Loss': [None],
+                    'Time': [time.strftime('%Y-%m-%d %H:%M:%S')]
+                })
 
-                active_trades = active_trades.drop(index)  # Remove from active trades
+                if not new_trade.isna().all().all():
+                    sold_trades = pd.concat([sold_trades, new_trade], ignore_index=True)
+
+                active_trades = active_trades.drop(index)
 
             # Check for stop-loss hit
             elif current_price <= sl_price:
@@ -156,20 +154,126 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
                 loss = total_value_bought - total_value_sold
                 print(f"Stop-loss hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, Loss: ₹{loss}")
 
-                # Append the result to the results file
-                with open(results_file, 'a') as f:
-                    f.write(f"{ticker},{current_price},{quantity},{total_value_sold},,{loss},{time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                new_trade = pd.DataFrame({
+                    'Ticker': [ticker], 'Sell Price': [current_price], 'Quantity Sold': [quantity],
+                    'Total Value Sold': [total_value_sold], 'Profit': [None], 'Loss': [loss],
+                    'Time': [time.strftime('%Y-%m-%d %H:%M:%S')]
+                })
 
-                active_trades = active_trades.drop(index)  # Remove from active trades
-                
+                if not new_trade.isna().all().all():
+                    sold_trades = pd.concat([sold_trades, new_trade], ignore_index=True)
+
+                active_trades = active_trades.drop(index)
+
+        calculate_and_print_investment_status(active_trades, sold_trades)
+
         if (current_time.hour > 15) or (current_time.hour == 15 and current_time.minute >= 30):
             print("End of trading day reached. Stopping monitoring.")
-            break  # Exit the loop if EOD is reached
-                
-        # Sleep for the specified interval before the next check
+            break
+
         time.sleep(check_interval)
 
+    # Save the sold trades to a CSV file with 5 blank rows before the next entry
+    if not sold_trades.empty:
+        # Create a DataFrame with 5 blank rows
+        blank_rows = pd.DataFrame([[''] * sold_trades.shape[1]] * 2, columns=sold_trades.columns)
+        
+        # Concatenate the blank rows with sold trades
+        to_save = pd.concat([sold_trades, blank_rows], ignore_index=True)
+        
+        # Append to the CSV file
+        to_save.to_csv('papertrade_result.csv', mode='a', header=not pd.io.common.file_exists('papertrade_result.csv'), index=False)
+
     print("Monitoring complete. All results have been logged to papertrade_result.csv.")
+
+
+
+
+
+def calculate_and_print_investment_status(active_trades, sold_trades):
+    """
+    Calculate and print the net investment sold, net capital still invested,
+    and net investment change based on trades that have hit target or stop-loss.
+    
+    Args:
+    - active_trades (pd.DataFrame): DataFrame of ongoing trades that haven't hit target or stop-loss.
+    - sold_trades (pd.DataFrame): DataFrame of trades where target or stop-loss was hit and sold.
+    """
+
+    # Calculate net investment sold
+    if not sold_trades.empty:
+        net_investment_sold = sold_trades['Total Value Sold'].sum()
+        print(f"Net Investment Sold (after target/SL hit): ₹{net_investment_sold:.2f}")
+    else:
+        net_investment_sold = 0
+        print("No trades have hit target or stop-loss yet.")
+
+    # Calculate net capital still invested
+    if not active_trades.empty:
+        net_capital_invested = active_trades['Total Value Bought'].sum()
+        print(f"Net Capital Still Invested: ₹{net_capital_invested:.2f}")
+    else:
+        net_capital_invested = 0
+        print("No capital is still invested in active trades.")
+        
+    # Calculate net investment bought
+    net_investment_bought = calculate_net_investment_bought()
+
+    # Calculate net investment change
+    net_investment_change = net_investment_sold - net_investment_bought
+    print(f"Net Change: ₹{net_investment_change:.2f}")
+
+    # Calculate percentage change
+    if net_investment_bought != 0:  # Avoid division by zero
+        percentage_change = (net_investment_change / net_investment_bought) * 100
+        print(f"Percentage Change: {percentage_change:.2f}%")
+    else:
+        print("No investment bought to calculate percentage change.")
+
+
+
+
+def calculate_net_investment_bought(sold_trades_file='papertrade_result.csv', active_trades_file='papertrade.csv'):
+    """
+    Calculate the net investment bought based on trades in the sold trades file.
+
+    Args:
+    - sold_trades_file (str): Path to the papertrade_result.csv file.
+    - active_trades_file (str): Path to the papertrade.csv file.
+    
+    Returns:
+    - float: Total net investment bought.
+    """
+    try:
+        # Read the sold trades
+        sold_trades = pd.read_csv(sold_trades_file)
+        # Read the active trades
+        active_trades = pd.read_csv(active_trades_file)
+    except FileNotFoundError as e:
+        print(f"File not found: {e}")
+        return 0.0
+    except Exception as e:
+        print(f"Error reading files: {e}")
+        return 0.0
+
+    # Initialize total investment bought
+    total_investment_bought = 0.0
+
+    # Loop through each ticker in sold trades
+    for ticker in sold_trades['Ticker'].unique():
+        # Get corresponding active trades for the ticker
+        active_trade = active_trades[active_trades['Ticker'] == ticker]
+        
+        if not active_trade.empty:
+            # Sum the Total Value Bought for the current ticker
+            total_value_bought = active_trade['Total Value Bought'].sum()
+            total_investment_bought += total_value_bought
+
+    print(f"Net Investment Bought: ₹{total_investment_bought:.2f}")
+    return total_investment_bought
+
+
+
 
 
 def main():
@@ -177,11 +281,12 @@ def main():
     logging.info("Starting the trading algorithm...")
     
     # Setup Kite session
-    kite = setup_kite_session()
+    kite = setup_kite_session()     
     
     # Fetch instruments
     instrument_df = fetch_instruments(kite)
 
+    
     # Run the monitoring function
     monitor_paper_trades(kite, instrument_df)
 

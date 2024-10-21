@@ -123,7 +123,7 @@ def fetch_ohlc(kite, ticker, interval, start_date, end_date):
         return None
 
 
-def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', threshold=0.75, verbose=True):
+def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', threshold=2, verbose=True):
     """Continuously fetch 2-minute interval data for high-growth stocks."""
     
     end_time = dt.datetime.now()
@@ -149,6 +149,9 @@ def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', th
 
     all_significant_changes = []
 
+    # Dictionary to store the last significant close price for each stock
+    last_close = {}
+
     for ticker in growth_stocks:
         try:
             ohlc_data_2min = fetch_ohlc(kite, ticker, '2minute', start_date, end_date)
@@ -164,15 +167,25 @@ def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', th
             if not significant_changes.empty:
                 if verbose:
                     print(f"\nSignificant positive price changes (> {threshold}% change) for {ticker} on {today.date()}:")
-                    print(significant_changes[['close', 'price_change']])
 
                 for index, row in significant_changes.iterrows():
-                    all_significant_changes.append({
-                        "ticker": ticker,
-                        "Time": index,
-                        "Close": row['close'],
-                        "Price Change": row['price_change']
-                    })
+                    current_close = row['close']
+
+                    # Check if there is a previous close for the ticker and compare
+                    if ticker not in last_close or current_close > last_close[ticker]:
+                        if verbose:
+                            print(f"Time: {index}, Close: {current_close}, Price Change: {row['price_change']:.2f}%")
+                        
+                        # Update the last closing price
+                        last_close[ticker] = current_close
+
+                        # Append to the list of significant changes
+                        all_significant_changes.append({
+                            "ticker": ticker,
+                            "Time": index,
+                            "Close": current_close,
+                            "Price Change": row['price_change']
+                        })
 
         except KeyError as e:
             logging.error(f"Ticker error for {ticker}: {e}")
@@ -190,6 +203,7 @@ def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', th
 
     print(f"Fetched data for the 2-minute interval from {start_time} to {end_time}.")
 
+
 def get_price_changes(df):
     """Calculates the percentage change in 'close' price between consecutive rows."""
     df['price_change'] = df['close'].pct_change() * 100
@@ -201,7 +215,7 @@ def main():
     kite = setup_kite_session()
     global instrument_df
     instrument_df = fetch_instruments(kite)
-    fetch_2min_intervals_for_high_growth_stocks(kite, threshold=0.75)
+    fetch_2min_intervals_for_high_growth_stocks(kite, threshold=0.7)
 
 if __name__ == "__main__":
     main()
