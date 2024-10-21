@@ -1,13 +1,9 @@
+# et1_vol_2%_rsi_60_selection.py
 # -*- coding: utf-8 -*-
 """
 Created on Fri Oct 11 17:41:53 2024
 
 @author: Saarit
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Zerodha kiteconnect automated authentication without a scheduler.
 """
 
 import time
@@ -26,15 +22,13 @@ import tkinter as tk
 from tkinter import scrolledtext
 import threading
 
+# Set up logging to a file
+logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
 
 # Define the correct path
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
-
 
 # Known market holidays for 2024 (example)
 market_holidays = [
@@ -43,34 +37,37 @@ market_holidays = [
 ]
 
 # Generate trading session
-try:
-    with open("access_token.txt", 'r') as token_file:
-        access_token = token_file.read().strip()
+def setup_kite_session():
+    try:
+        with open("access_token.txt", 'r') as token_file:
+            access_token = token_file.read().strip()
 
-    with open("api_key.txt", 'r') as key_file:
-        key_secret = key_file.read().split()
+        with open("api_key.txt", 'r') as key_file:
+            key_secret = key_file.read().split()
 
-    kite = KiteConnect(api_key=key_secret[0])
-    kite.set_access_token(access_token)
-    logging.info("Kite session established successfully.")
+        kite = KiteConnect(api_key=key_secret[0])
+        kite.set_access_token(access_token)
+        logging.info("Kite session established successfully.")
+        return kite
 
-except FileNotFoundError as e:
-    logging.error(f"File not found: {e}")
-    raise
-except Exception as e:
-    logging.error(f"Error setting up Kite session: {e}")
-    raise
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Error setting up Kite session: {e}")
+        raise
 
 # Get dump of all NSE instruments
-try:
-    instrument_dump = kite.instruments("NSE")
-    instrument_df = pd.DataFrame(instrument_dump)
-    logging.info("NSE instrument data fetched successfully.")
-    
-except Exception as e:
-    logging.error(f"Error fetching instruments: {e}")
-    raise
-
+def fetch_nse_instruments(kite):
+    try:
+        instrument_dump = kite.instruments("NSE")
+        instrument_df = pd.DataFrame(instrument_dump)
+        logging.info("NSE instrument data fetched successfully.")
+        return instrument_df
+        
+    except Exception as e:
+        logging.error(f"Error fetching instruments: {e}")
+        raise
 
 def paper_trade_from_significant_changes(file_path='significant_change.csv', trade_amount=20000, output_file='papertrade.csv'):
     """
@@ -142,8 +139,14 @@ def paper_trade_from_significant_changes(file_path='significant_change.csv', tra
     else:
         print("No trades were made.")
 
-
-# Example usage
-paper_trade_from_significant_changes()
-
+def main():
     
+    logging.info("Starting the trading algorithm...")
+    kite = setup_kite_session()
+    instrument_df = fetch_nse_instruments(kite)
+    paper_trade_from_significant_changes()
+
+if __name__ == "__main__":
+    main()
+    logging.shutdown()
+

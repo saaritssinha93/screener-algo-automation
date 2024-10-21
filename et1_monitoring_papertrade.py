@@ -12,14 +12,12 @@ import os
 import datetime as dt
 import pandas as pd
 import numpy as np
-import sys
-import datetime as dt
-import pandas as pd
-import logging
-from datetime import datetime
 import tkinter as tk
 from tkinter import scrolledtext
 import threading
+
+# Set up logging
+logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Known market holidays for 2024 (example)
 market_holidays = [
@@ -27,34 +25,40 @@ market_holidays = [
     # Add other known holidays for the year here
 ]
 
-# Generate trading session
-try:
-    with open("access_token.txt", 'r') as token_file:
-        access_token = token_file.read().strip()
+# Function to setup Kite Connect session
+def setup_kite_session():
+    """Establishes a Kite Connect session."""
+    try:
+        with open("access_token.txt", 'r') as token_file:
+            access_token = token_file.read().strip()
 
-    with open("api_key.txt", 'r') as key_file:
-        key_secret = key_file.read().split()
+        with open("api_key.txt", 'r') as key_file:
+            key_secret = key_file.read().split()
 
-    kite = KiteConnect(api_key=key_secret[0])
-    kite.set_access_token(access_token)
-    logging.info("Kite session established successfully.")
+        kite = KiteConnect(api_key=key_secret[0])
+        kite.set_access_token(access_token)
+        logging.info("Kite session established successfully.")
+        return kite
 
-except FileNotFoundError as e:
-    logging.error(f"File not found: {e}")
-    raise
-except Exception as e:
-    logging.error(f"Error setting up Kite session: {e}")
-    raise
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Error setting up Kite session: {e}")
+        raise
 
-# Get dump of all NSE instruments
-try:
-    instrument_dump = kite.instruments("NSE")
-    instrument_df = pd.DataFrame(instrument_dump)
-    logging.info("NSE instrument data fetched successfully.")
-    
-except Exception as e:
-    logging.error(f"Error fetching instruments: {e}")
-    raise
+# Function to get dump of all NSE instruments
+def fetch_instruments(kite):
+    """Fetches all NSE instruments and returns a DataFrame."""
+    try:
+        instrument_dump = kite.instruments("NSE")
+        instrument_df = pd.DataFrame(instrument_dump)
+        logging.info("NSE instrument data fetched successfully.")
+        return instrument_df
+
+    except Exception as e:
+        logging.error(f"Error fetching instruments: {e}")
+        raise
 
 # Function to lookup instrument token
 def instrument_lookup(instrument_df, symbol):
@@ -68,14 +72,25 @@ def instrument_lookup(instrument_df, symbol):
     except Exception as e:
         logging.error(f"Error in instrument lookup: {e}")
         return -1
-import pandas as pd
-import time
 
-def monitor_paper_trades(file_path='papertrade.csv', target_percentage=2.0, sl_percentage=1.5, check_interval=60):
+# Function to fetch live price
+def fetch_current_price(ticker, kite, instrument_df):
+    """Fetches the current live price of the given stock."""
+    try:
+        instrument = instrument_lookup(instrument_df, ticker)
+        live_price_data = kite.ltp(f"NSE:{ticker}")
+        return live_price_data[f"NSE:{ticker}"]["last_price"]
+    except Exception as e:
+        logging.error(f"Error fetching live price for {ticker}: {e}")
+        return None
+
+def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target_percentage=2.0, sl_percentage=1.5, check_interval=60):
     """
     Monitor the paper trades for target and stop-loss conditions.
     
     Args:
+    - kite (KiteConnect): Kite Connect instance for fetching live prices.
+    - instrument_df (pd.DataFrame): DataFrame containing instrument information.
     - file_path (str): Path to the papertrade.csv file.
     - target_percentage (float): Percentage target for profit (default 2%).
     - sl_percentage (float): Percentage stop-loss (default 1.5%).
@@ -108,8 +123,8 @@ def monitor_paper_trades(file_path='papertrade.csv', target_percentage=2.0, sl_p
             quantity = row['Quantity']
             total_value_bought = row['Total Value Bought']
 
-            # Fetch the current price of the ticker (placeholder function)
-            current_price = fetch_current_price(ticker)
+            # Fetch the current price of the ticker
+            current_price = fetch_current_price(ticker, kite, instrument_df)
 
             # Calculate target and stop-loss prices
             target_price = buy_price * (1 + target_percentage / 100)
@@ -144,18 +159,20 @@ def monitor_paper_trades(file_path='papertrade.csv', target_percentage=2.0, sl_p
 
     print("Monitoring complete. All results have been logged to papertrade_result.csv.")
 
+def main():
+    
+    logging.info("Starting the trading algorithm...")
+    
+    # Setup Kite session
+    kite = setup_kite_session()
+    
+    # Fetch instruments
+    instrument_df = fetch_instruments(kite)
 
-# Function to fetch live price
-def fetch_current_price(ticker):
-    """Fetches the current live price of the given stock."""
-    try:
-        instrument = instrument_lookup(instrument_df, ticker)
-        live_price_data = kite.ltp(f"NSE:{ticker}")
-        return live_price_data[f"NSE:{ticker}"]["last_price"]
-    except Exception as e:
-        logging.error(f"Error fetching live price for {ticker}: {e}")
-        return None
+    # Run the monitoring function
+    monitor_paper_trades(kite, instrument_df)
 
+if __name__ == "__main__":
+    main()
+    logging.shutdown()
 
-# Run the monitoring function
-monitor_paper_trades()

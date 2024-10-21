@@ -5,11 +5,6 @@ Created on Fri Oct 11 17:41:53 2024
 @author: Saarit
 """
 
-# -*- coding: utf-8 -*-
-"""
-Zerodha kiteconnect automated authentication without a scheduler.
-"""
-
 import time
 from kiteconnect import KiteConnect
 import logging
@@ -17,13 +12,11 @@ import os
 import datetime as dt
 import pandas as pd
 import numpy as np
-import sys
 import tkinter as tk
 from tkinter import scrolledtext
-import threading
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging to a file
+logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define the correct path
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
@@ -36,33 +29,39 @@ market_holidays = [
 ]
 
 # Generate trading session
-try:
-    with open("access_token.txt", 'r') as token_file:
-        access_token = token_file.read().strip()
+def setup_kite_session():
+    """Set up the KiteConnect session and return the kite object."""
+    try:
+        with open("access_token.txt", 'r') as token_file:
+            access_token = token_file.read().strip()
 
-    with open("api_key.txt", 'r') as key_file:
-        key_secret = key_file.read().split()
+        with open("api_key.txt", 'r') as key_file:
+            key_secret = key_file.read().split()
 
-    kite = KiteConnect(api_key=key_secret[0])
-    kite.set_access_token(access_token)
-    logging.info("Kite session established successfully.")
+        kite = KiteConnect(api_key=key_secret[0])
+        kite.set_access_token(access_token)
+        logging.info("Kite session established successfully.")
+        return kite
 
-except FileNotFoundError as e:
-    logging.error(f"File not found: {e}")
-    raise
-except Exception as e:
-    logging.error(f"Error setting up Kite session: {e}")
-    raise
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Error setting up Kite session: {e}")
+        raise
 
 # Get dump of all NSE instruments
-try:
-    instrument_dump = kite.instruments("NSE")
-    instrument_df = pd.DataFrame(instrument_dump)
-    logging.info("NSE instrument data fetched successfully.")
-    
-except Exception as e:
-    logging.error(f"Error fetching instruments: {e}")
-    raise
+def fetch_instruments(kite):
+    """Fetch all NSE instruments and return as a DataFrame."""
+    try:
+        instrument_dump = kite.instruments("NSE")
+        instrument_df = pd.DataFrame(instrument_dump)
+        logging.info("NSE instrument data fetched successfully.")
+        return instrument_df
+
+    except Exception as e:
+        logging.error(f"Error fetching instruments: {e}")
+        raise
 
 # Function to lookup instrument token
 def instrument_lookup(instrument_df, symbol):
@@ -80,7 +79,7 @@ def instrument_lookup(instrument_df, symbol):
 # Function to check if a day is a market open day (skips weekends and holidays)
 def is_market_open(day):
     """Returns True if the day is a market open day (i.e., not a weekend or a holiday)."""
-    return day.weekday() < 5 and day not in market_holidays  # Monday=0, ..., Friday=4 (market open), skip weekends and holidays
+    return day.weekday() < 5 and day not in market_holidays  # Monday=0, ..., Friday=4
 
 # Function to find the most recent trading day
 def get_last_trading_day():
@@ -88,13 +87,12 @@ def get_last_trading_day():
     today = dt.date.today()
     day = today - dt.timedelta(days=1)  # Start with yesterday
     
-    # Keep going back until we find a market open day
     while not is_market_open(day):
         day -= dt.timedelta(days=1)
     
     return day
 
-def fetch_ohlc(ticker, interval, start_date, end_date):
+def fetch_ohlc(kite, ticker, interval, start_date, end_date):
     """Extracts historical OHLC data for a specific date range and returns it as a DataFrame."""
     try:
         instrument = instrument_lookup(instrument_df, ticker)
@@ -115,11 +113,11 @@ def fetch_ohlc(ticker, interval, start_date, end_date):
             data.set_index("date", inplace=True)
             return data
         else:
-            print(f"No data returned for {ticker}")  # Simplified message for no data
+            logging.warning(f"No data returned for {ticker}")
             return pd.DataFrame()
 
     except Exception as e:
-        print(f"Error fetching OHLC data for {ticker}: {e}")  # Reduced logging to print
+        logging.error(f"Error fetching OHLC data for {ticker}: {e}")
         return None
 
 # Function to show a popup with significant price changes
@@ -138,15 +136,11 @@ def show_significant_changes_popup(changes):
     else:
         text_area.insert(tk.END, "No significant price changes found.\n")
 
-    # Automatically close the window after 120 seconds
-    window.after(120000, window.destroy)  # 120000 milliseconds = 120 seconds
-
+    window.after(120000, window.destroy)  # Close after 120 seconds
     window.mainloop()
 
-# Updated fetch function with a loop to continuously run
-def fetch_2min_intervals_for_high_growth_stocks(file_path='rsi_60.csv', threshold=0.75, verbose=True):
-    """Continuously fetch 2-minute interval data for high-growth stocks from rsi_result.csv, 
-    handle errors, and store the output in significant_change.csv."""
+def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', threshold=0.75, verbose=True):
+    """Continuously fetch 2-minute interval data for high-growth stocks."""
     
     end_time = dt.datetime.now()
     start_time = end_time - dt.timedelta(minutes=2)
@@ -154,7 +148,7 @@ def fetch_2min_intervals_for_high_growth_stocks(file_path='rsi_60.csv', threshol
     # Read tickers from rsi_result.csv
     try:
         growth_stocks_df = pd.read_csv(file_path)
-        growth_stocks = growth_stocks_df['ticker'].tolist()  # Changed to 'ticker'
+        growth_stocks = growth_stocks_df['ticker'].tolist()
         logging.info(f"Fetched {len(growth_stocks)} stocks from {file_path}.")
     except FileNotFoundError as e:
         logging.error(f"File {file_path} not found: {e}")
@@ -163,29 +157,24 @@ def fetch_2min_intervals_for_high_growth_stocks(file_path='rsi_60.csv', threshol
         logging.error(f"Error reading {file_path}: {e}")
         return
 
-    # Set the market start and end time for today
     today = dt.datetime.now()
     start_date = today.replace(hour=9, minute=15, second=0, microsecond=0)
     end_date = today.replace(hour=15, minute=30, second=0, microsecond=0)
 
     logging.info(f"Scanning 2-minute data for high-growth stocks on {today.date()}.")
 
-    # Prepare to collect significant changes for CSV
     all_significant_changes = []
 
-    for ticker in growth_stocks:  # Changed variable name to ticker
+    for ticker in growth_stocks:
         try:
-            # Fetch OHLC data for 2-minute intervals
-            ohlc_data_2min = fetch_ohlc(ticker, '2minute', start_date, end_date)
+            ohlc_data_2min = fetch_ohlc(kite, ticker, '2minute', start_date, end_date)
 
             if ohlc_data_2min is None or ohlc_data_2min.empty:
                 logging.warning(f"No 2-minute data available for {ticker}. Skipping.")
                 continue
 
-            # Calculate the percentage price changes between consecutive intervals
             ohlc_data_2min = get_price_changes(ohlc_data_2min)
 
-            # Filter for intervals with a positive price change greater than the threshold
             significant_changes = ohlc_data_2min[ohlc_data_2min['price_change'] > threshold]
 
             if not significant_changes.empty:
@@ -193,10 +182,9 @@ def fetch_2min_intervals_for_high_growth_stocks(file_path='rsi_60.csv', threshol
                     print(f"\nSignificant positive price changes (> {threshold}% change) for {ticker} on {today.date()}:")
                     print(significant_changes[['close', 'price_change']])
 
-                # Append significant changes to the list for CSV output
                 for index, row in significant_changes.iterrows():
                     all_significant_changes.append({
-                        "ticker": ticker,  # Changed to 'ticker'
+                        "ticker": ticker,
                         "Time": index,
                         "Close": row['close'],
                         "Price Change": row['price_change']
@@ -209,32 +197,29 @@ def fetch_2min_intervals_for_high_growth_stocks(file_path='rsi_60.csv', threshol
             logging.error(f"Error fetching 2-minute data for {ticker}: {e}")
             print(f"Error fetching data for {ticker}: {e}")
 
-    # Save all significant changes to significant_change.csv
     if all_significant_changes:
         changes_df = pd.DataFrame(all_significant_changes)
         changes_df.to_csv("significant_change.csv", index=False)
         print(f"Significant price changes saved to significant_change.csv")
-
-        # Show significant changes in a popup window
         show_significant_changes_popup(all_significant_changes)
     else:
         print("No significant price changes found for any stocks.")
 
-    # Log or print the time of execution
     print(f"Fetched data for the 2-minute interval from {start_time} to {end_time}.")
 
-# Function to calculate percentage change between consecutive intervals
 def get_price_changes(df):
     """Calculates the percentage change in 'close' price between consecutive rows."""
     df['price_change'] = df['close'].pct_change() * 100
     return df
 
-# Initial fetch execution
-end_time = dt.datetime.now()
-start_time = end_time - dt.timedelta(minutes=3)
+def main():
+    
+    logging.info("Starting the trading algorithm...")
+    kite = setup_kite_session()
+    global instrument_df
+    instrument_df = fetch_instruments(kite)
+    fetch_2min_intervals_for_high_growth_stocks(kite, threshold=0.75)
 
-# Fetch the updated 2-minute interval data
-fetch_2min_intervals_for_high_growth_stocks(threshold=0.75)
-
-# Log or print the time of execution
-print(f"Fetched data for the 2-minute interval from {start_time} to {end_time}.")
+if __name__ == "__main__":
+    main()
+    logging.shutdown()

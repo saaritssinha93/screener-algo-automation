@@ -27,9 +27,8 @@ from tkinter import scrolledtext
 import threading
 
 
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging to a file
+logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Define the correct path
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
