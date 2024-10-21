@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Oct 11 17:41:53 2024
-
-@author: Saarit
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Zerodha kiteconnect automated authentication without a scheduler.
 """
 
@@ -349,58 +342,52 @@ def calculate_30_day_sma_volume(ticker, start_date, end_date):
         return pd.DataFrame()
 
 
-def select_high_volume_stocks(ticker, start_date, end_date, volume_multiplier=1.3):
+
+def filter_and_store_growth_stocks(input_file='high_volume_stocks.csv', output_file='volume_price_growth_stocks.csv'):
     """
-    Function to select stocks where the current volume is 1.5 times the 10-day SMA of volume,
-    and return the last close price and the current live price along with volume details.
+    Function to compare last close price with current price from high_volume_stocks.csv
+    and store stocks with more than 2% price growth in a new CSV file.
     
     Args:
-        ticker (str): The stock symbol to check.
-        start_date (datetime): The start date for fetching historical data.
-        end_date (datetime): The end date for fetching historical data.
-        volume_multiplier (float): Multiplier to compare the current volume with the 10-day SMA.
+        input_file (str): The CSV file containing high volume stock data.
+        output_file (str): The CSV file to store the selected growth stocks.
         
     Returns:
-        dict: A dictionary containing the ticker, current volume, last close price, 
-              current live price, and 10-day SMA volume if it meets the criteria.
-        None: If the stock does not meet the criteria.
+        None
     """
-    today = dt.date.today()
-    yesterday = today - dt.timedelta(days=1)
-    
     try:
-        # Fetch the 10-day SMA volume data
-        data = calculate_30_day_sma_volume(ticker, start_date, end_date)
-        # Fetch OHLC data for start_date (daily) and specified_date (5-minute intervals)
-        last_close_price = get_last_closing_price(ticker, yesterday, yesterday)
-        
-        if not data.empty:
-            # Get the current volume (latest date) and 10-day SMA of the volume
-            current_volume = data['volume'].iloc[-1]
-            sma_volume = data['30_day_sma_volume'].iloc[-1]
+        # Read the high volume stocks data
+        df = pd.read_csv(input_file)
 
+        # Ensure the required columns are present
+        required_columns = ['ticker', 'current_volume', 'sma_volume', 'last_close_price', 'current_price']
+        for col in required_columns:
+            if col not in df.columns:
+                raise ValueError(f"CSV file does not contain required column: {col}")
 
+        # Calculate percentage growth
+        df['percentage_growth'] = ((df['current_price'] - df['last_close_price']) / df['last_close_price']) * 100
 
-            # Fetch the current live price using Kite API or other service
-            current_price = get_live_price(ticker)
-            
-            # Check if the current volume is greater than or equal to 1.5 times the 10-day SMA
-            if current_volume >= volume_multiplier * sma_volume:
-                # If the condition is met, return the ticker, prices, and volume details
-                return {
-                    'ticker': ticker,
-                    'current_volume': current_volume,
-                    'sma_volume': sma_volume,
-                    'last_close_price': last_close_price,
-                    'current_price': current_price
-                }
+        # Filter stocks with more than 2% growth
+        growth_stocks = df[df['percentage_growth'] > 2]
+
+        # If there are stocks meeting the criteria, sort and save to new CSV file
+        if not growth_stocks.empty:
+            # Sort by percentage growth in descending order
+            growth_stocks_sorted = growth_stocks.sort_values(by='percentage_growth', ascending=False)
+
+            # Save to CSV
+            growth_stocks_sorted.to_csv(output_file, index=False)
+            print(f"Stocks with more than 2% growth saved to {output_file}:")
+            print(growth_stocks_sorted[['ticker', 'last_close_price', 'current_price', 'percentage_growth']])
         else:
-            logging.info(f"No valid data available for {ticker}")
+            print("No stocks with more than 2% growth found.")
 
     except Exception as e:
-        logging.error(f"Error selecting stock {ticker}: {e}")
-    
-    return None  # Return None if the stock doesn't meet the criteria
+        print(f"Error processing the stocks data: {e}")
+
+# Example usage
+filter_and_store_growth_stocks()
 
 
 # Function to filter and store the selected stocks

@@ -310,29 +310,38 @@ def calculate_30_day_sma_volume(ticker, start_date, end_date):
         logging.error(f"Error calculating 30day SMA for {ticker}: {e}")
         return pd.DataFrame()
 
+import datetime as dt
 
 def select_high_volume_stocks(ticker, start_date, end_date, volume_multiplier=1.3):
     """
     Function to select stocks where the current volume is 1.5 times the 10-day SMA of volume,
     and return the last close price and the current live price along with volume details.
-    
+
     Args:
         ticker (str): The stock symbol to check.
         start_date (datetime): The start date for fetching historical data.
         end_date (datetime): The end date for fetching historical data.
         volume_multiplier (float): Multiplier to compare the current volume with the 10-day SMA.
-        
+
     Returns:
         dict: A dictionary containing the ticker, current volume, last close price, 
               current live price, and 10-day SMA volume if it meets the criteria.
         None: If the stock does not meet the criteria.
     """
+
     today = dt.date.today()
-    yesterday = today - dt.timedelta(days=1)
-    
+
+    # If today is Monday, set yesterday to the previous Friday
+    if today.weekday() == 0:  # Monday is 0
+        yesterday = today - dt.timedelta(days=3)
+    # For all other days, just subtract 1 day
+    else:
+        yesterday = today - dt.timedelta(days=1)
+
     try:
         # Fetch the 10-day SMA volume data
         data = calculate_30_day_sma_volume(ticker, start_date, end_date)
+        
         # Fetch OHLC data for start_date (daily) and specified_date (5-minute intervals)
         last_close_price = get_last_closing_price(ticker, yesterday, yesterday)
         
@@ -341,11 +350,9 @@ def select_high_volume_stocks(ticker, start_date, end_date, volume_multiplier=1.
             current_volume = data['volume'].iloc[-1]
             sma_volume = data['30_day_sma_volume'].iloc[-1]
 
-
-
             # Fetch the current live price using Kite API or other service
             current_price = get_live_price(ticker)
-            
+
             # Check if the current volume is greater than or equal to 1.5 times the 10-day SMA
             if current_volume >= volume_multiplier * sma_volume:
                 # If the condition is met, return the ticker, prices, and volume details
@@ -361,8 +368,9 @@ def select_high_volume_stocks(ticker, start_date, end_date, volume_multiplier=1.
 
     except Exception as e:
         logging.error(f"Error selecting stock {ticker}: {e}")
-    
+
     return None  # Return None if the stock doesn't meet the criteria
+
 
 
 # Function to filter and store the selected stocks
@@ -399,7 +407,7 @@ def store_high_volume_stocks(start_date, end_date, volume_multiplier=1.3, output
 
 # Example usage
 start_date = dt.datetime(2024, 8, 15)  # Set appropriate start date
-end_date = dt.datetime(2024, 10, 17)  # Set appropriate end date (today's date)
+end_date = dt.datetime(2024, 10, 21)  # Set appropriate end date (today's date)
 
 # Store stocks with current volume 1.5x of 30-day SMA
 store_high_volume_stocks(start_date, end_date)
