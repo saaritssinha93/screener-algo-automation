@@ -10,20 +10,12 @@ Created on Fri Oct 11 17:41:53 2024
 Zerodha kiteconnect automated authentication without a scheduler.
 """
 
-import time
 from kiteconnect import KiteConnect
 import logging
 import os
 import datetime as dt
 import pandas as pd
-import numpy as np
 import sys
-import tkinter as tk
-from tkinter import scrolledtext
-import threading
-
-sys.path.append('C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation')
-from et1_stock_tickers import shares
 
 # Set up logging to a file
 logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,7 +24,8 @@ logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(as
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
 
-
+sys.path.append('C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation')
+from et1_stock_tickers import shares
 
 # Known market holidays for 2024 (example)
 market_holidays = [

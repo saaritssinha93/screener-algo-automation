@@ -9,3 +9,5 @@ today_5min_data.csv
 *.csv
 significant_price_changes.csv
 high_growth_stocks.csv
+*.log
+*.log.log

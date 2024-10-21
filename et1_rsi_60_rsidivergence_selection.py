@@ -5,17 +5,14 @@ Created on Mon Oct 21 16:07:42 2024
 @author: Saarit
 """
 
-import time
+
 from kiteconnect import KiteConnect
 import logging
 import os
 import datetime as dt
 import pandas as pd
 import numpy as np
-import sys
-import tkinter as tk
-from tkinter import scrolledtext
-import threading
+
 
 # Set up logging to a file
 logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

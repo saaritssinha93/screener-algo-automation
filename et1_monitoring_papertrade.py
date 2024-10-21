@@ -11,10 +11,6 @@ import logging
 import os
 import datetime as dt
 import pandas as pd
-import numpy as np
-import tkinter as tk
-from tkinter import scrolledtext
-import threading
 
 # Set up logging
 logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

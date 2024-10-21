@@ -5,13 +5,11 @@ Created on Fri Oct 11 17:41:53 2024
 @author: Saarit
 """
 
-import time
 from kiteconnect import KiteConnect
 import logging
 import os
 import datetime as dt
 import pandas as pd
-import numpy as np
 import tkinter as tk
 from tkinter import scrolledtext
 
