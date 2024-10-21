@@ -122,24 +122,6 @@ def fetch_ohlc(kite, ticker, interval, start_date, end_date):
         logging.error(f"Error fetching OHLC data for {ticker}: {e}")
         return None
 
-# Function to show a popup with significant price changes
-def show_significant_changes_popup(changes):
-    """Creates a popup window to display significant price changes."""
-    window = tk.Tk()
-    window.title("Significant Price Changes")
-
-    text_area = scrolledtext.ScrolledText(window, wrap=tk.WORD, width=100, height=40)
-    text_area.pack(padx=10, pady=10)
-
-    if changes:
-        for change in changes:
-            text_area.insert(tk.END, f"Ticker: {change['ticker']}, Time: {change['Time']}, "
-                                       f"Close: {change['Close']}, Price Change: {change['Price Change']:.2f}%\n")
-    else:
-        text_area.insert(tk.END, "No significant price changes found.\n")
-
-    window.after(120000, window.destroy)  # Close after 120 seconds
-    window.mainloop()
 
 def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', threshold=0.75, verbose=True):
     """Continuously fetch 2-minute interval data for high-growth stocks."""
@@ -203,7 +185,6 @@ def fetch_2min_intervals_for_high_growth_stocks(kite, file_path='rsi_60.csv', th
         changes_df = pd.DataFrame(all_significant_changes)
         changes_df.to_csv("significant_change.csv", index=False)
         print(f"Significant price changes saved to significant_change.csv")
-        show_significant_changes_popup(all_significant_changes)
     else:
         print("No significant price changes found for any stocks.")
 
