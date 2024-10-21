@@ -404,17 +404,6 @@ def store_high_volume_stocks(start_date, end_date, volume_multiplier=1.3, output
         print("No stocks met the criteria.")
 
 
-
-# Example usage
-start_date = dt.datetime(2024, 8, 15)  # Set appropriate start date
-end_date = dt.datetime(2024, 10, 21)  # Set appropriate end date (today's date)
-
-# Store stocks with current volume 1.5x of 30-day SMA
-store_high_volume_stocks(start_date, end_date)
-
-
-
-
 def filter_and_store_growth_stocks(input_file='high_volume_stocks.csv', output_file='volume_price_growth_stocks.csv'):
     """
     Function to compare last close price with current price from high_volume_stocks.csv
@@ -458,42 +447,48 @@ def filter_and_store_growth_stocks(input_file='high_volume_stocks.csv', output_f
     except Exception as e:
         print(f"Error processing the stocks data: {e}")
 
+
+
+
+# Function to calculate RSI using Exponential Weighted Moving Average (EWM)
+def RSI(DF, n=14):
+    """Function to calculate RSI using Exponential Weighted Moving Average (EWM)"""
+    df = DF.copy()
+    
+    # Calculating changes in 'close' prices
+    df['change'] = df['close'].diff()
+    
+    # Calculating gains and losses
+    df['gain'] = np.where(df['change'] > 0, df['change'], 0)
+    df['loss'] = np.where(df['change'] < 0, -df['change'], 0)
+    
+    # Calculate Exponential Moving Averages of gains and losses using EWM
+    df['avgGain'] = df['gain'].ewm(alpha=1/n, min_periods=n).mean()
+    df['avgLoss'] = df['loss'].ewm(alpha=1/n, min_periods=n).mean()
+
+    # Calculate Relative Strength (RS)
+    df['rs'] = df['avgGain'] / df['avgLoss']
+    
+    # Calculate RSI based on RS
+    df['rsi'] = 100 - (100 / (1 + df['rs']))
+    
+    return df['rsi']
+
+
+
+
+
+# Example usage
+start_date = dt.datetime(2024, 8, 15)  # Set appropriate start date
+end_date = dt.datetime(2024, 10, 21)  # Set appropriate end date (today's date)
+
+# Store stocks with current volume 1.5x of 30-day SMA
+store_high_volume_stocks(start_date, end_date)
+
+
 # Example usage
 filter_and_store_growth_stocks()
 
-
-# Function to calculate RSI and its SMA
-def calculate_rsi(data, period=14):
-    """Calculates the Relative Strength Index (RSI) and its Simple Moving Average (SMA) for a given DataFrame."""
-    
-    # Ensure the data is sorted by date (if not already sorted)
-    data = data.sort_index()
-
-    # Calculate the price changes
-    delta = data['close'].diff()
-    
-    # Calculate gains and losses
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-
-    # Average gain
-    avgGain = gain.ewm(alpha=1/period, min_periods=period).mean()
-    
-    avgLoss = loss.ewm(alpha=1/period, min_periods=period).mean()
-    # Avoid division by zero for RS calculation
-    rs = avgGain / avgLoss.replace(0, np.nan)
-    
-    # Calculate RSI
-    rsi = 100 - (100 / (1 + rs))
-
-    # Calculate SMA of RSI
-    sma_rsi = rsi.rolling(window=period).mean()
-
-    # Adding RSI and SMA to the DataFrame
-    data['RSI'] = rsi
-    data['RSI_SMA'] = sma_rsi
-
-    return data
 
 # Load the shares from the CSV file
 input_csv_file = 'volume_price_growth_stocks.csv'
@@ -510,17 +505,18 @@ for index, row in stocks_data.iterrows():
     last_close_price = row['last_close_price']
     current_price = row['current_price']
     
-    start_date = get_last_trading_day() - dt.timedelta(days=50)  # Last 50 days
-    end_date = get_last_trading_day()
-
+    end_date = dt.datetime.today()  # Use the current date as the end date
+    start_date = end_date - dt.timedelta(days=180)  # 6 months ago (approximately 180 days)
+    
     # Fetch OHLC data for the current ticker
     ohlc_data = fetch_ohlc(ticker, 'day', start_date, end_date)
     
     if ohlc_data is not None and not ohlc_data.empty:
-        rsi_data = calculate_rsi(ohlc_data)
+        # Calculate RSI
+        ohlc_data['RSI'] = RSI(ohlc_data)
         
-        if 'close' in rsi_data.columns and 'RSI' in rsi_data.columns and 'RSI_SMA' in rsi_data.columns:
-            current_rsi = rsi_data['RSI'].iloc[-1]  # Get the latest RSI value
+        if 'RSI' in ohlc_data.columns:
+            current_rsi = ohlc_data['RSI'].iloc[-1]  # Get the latest RSI value
             
             # Create a new DataFrame for the current stock's data
             current_data = pd.DataFrame({
@@ -535,7 +531,7 @@ for index, row in stocks_data.iterrows():
             # Concatenate the current data with the results DataFrame
             rsi_results = pd.concat([rsi_results, current_data], ignore_index=True)
         else:
-            print(f"RSI calculation did not produce expected columns for {ticker}.")
+            print(f"RSI calculation did not produce expected results for {ticker}.")
     else:
         print(f"OHLC data is empty or None for {ticker}.")
 
@@ -544,3 +540,141 @@ output_csv_file = 'rsi_results.csv'
 rsi_results.to_csv(output_csv_file, index=False)
 
 print(f"RSI values stored in {output_csv_file}.")
+
+
+
+# Load the RSI results from the CSV file
+input_csv_file = 'rsi_results.csv'
+rsi_data = pd.read_csv(input_csv_file)
+
+# Filter the rows where RSI is greater than or equal to 60
+rsi_above_60 = rsi_data[rsi_data['RSI'] >= 60]
+
+# Save the filtered data to a new CSV file
+output_csv_file = 'rsi_60.csv'
+rsi_above_60.to_csv(output_csv_file, index=False)
+
+print(f"Filtered RSI values (RSI >= 60) saved in {output_csv_file}.")
+
+
+import pandas as pd
+import numpy as np
+
+def find_divergence(price_data, rsi_data):
+    """
+    Function to detect RSI divergence.
+    Looks for price making higher highs or lower lows while RSI makes lower highs or higher lows.
+    
+    Args:
+        price_data (pd.Series): Series of closing prices.
+        rsi_data (pd.Series): Series of RSI values.
+    
+    Returns:
+        str: 'bullish_divergence', 'bearish_divergence', or 'no_divergence'.
+    """
+    if len(price_data) < 3 or len(rsi_data) < 3:
+        return 'no_divergence'
+
+    # Find local peaks and troughs in price
+    price_highs = (price_data.shift(1) < price_data) & (price_data.shift(-1) < price_data)
+    price_lows = (price_data.shift(1) > price_data) & (price_data.shift(-1) > price_data)
+
+    # Find local peaks and troughs in RSI
+    rsi_highs = (rsi_data.shift(1) < rsi_data) & (rsi_data.shift(-1) < rsi_data)
+    rsi_lows = (rsi_data.shift(1) > rsi_data) & (rsi_data.shift(-1) > rsi_data)
+
+    # Check for bearish divergence (price higher highs, RSI lower highs)
+    if price_highs.iloc[-3:].sum() > 0 and rsi_highs.iloc[-3:].sum() > 0:
+        recent_price_high = price_data[price_highs].iloc[-1]
+        previous_price_high = price_data[price_highs].iloc[-2]
+        recent_rsi_high = rsi_data[rsi_highs].iloc[-1]
+        previous_rsi_high = rsi_data[rsi_highs].iloc[-2]
+
+        if recent_price_high > previous_price_high and recent_rsi_high < previous_rsi_high:
+            return 'bearish_divergence'
+
+    # Check for bullish divergence (price lower lows, RSI higher lows)
+    if price_lows.iloc[-3:].sum() > 0 and rsi_lows.iloc[-3:].sum() > 0:
+        recent_price_low = price_data[price_lows].iloc[-1]
+        previous_price_low = price_data[price_lows].iloc[-2]
+        recent_rsi_low = rsi_data[rsi_lows].iloc[-1]
+        previous_rsi_low = rsi_data[rsi_lows].iloc[-2]
+
+        if recent_price_low < previous_price_low and recent_rsi_low > previous_rsi_low:
+            return 'bullish_divergence'
+
+    return 'no_divergence'
+
+
+def check_rsi_divergence(input_csv_file, output_csv_file, kite, instrument_df):
+    """
+    Function to check for RSI divergence for all tickers in the input CSV file.
+    
+    Args:
+        input_csv_file (str): Path to the CSV file containing ticker and RSI data.
+        output_csv_file (str): Path to the output CSV file to store divergence results.
+        kite (KiteConnect): KiteConnect instance for fetching historical data.
+        instrument_df (pd.DataFrame): DataFrame containing instrument information.
+    
+    Returns:
+        pd.DataFrame: DataFrame containing tickers with their divergence status.
+    """
+    # Load the RSI results from the CSV file
+    rsi_data = pd.read_csv(input_csv_file)
+
+    # Initialize an empty list to store the results
+    divergence_results = []
+
+    # Loop through each stock in the DataFrame
+    for index, row in rsi_data.iterrows():
+        ticker = row['ticker']
+        current_price = row['current_price']
+        rsi_value = row['RSI']
+        
+        # Fetch historical OHLC data for the current ticker (last 180 days)
+        end_date = dt.datetime.today()
+        start_date = end_date - dt.timedelta(days=180)
+        ohlc_data = fetch_ohlc(ticker, 'day', start_date, end_date)
+
+        if ohlc_data is not None and not ohlc_data.empty:
+            closing_prices = ohlc_data['close']  # Get closing prices
+            rsi_values = RSI(ohlc_data)  # Calculate RSI using historical data
+
+            # Check for divergence
+            divergence = find_divergence(closing_prices, rsi_values)
+
+            # Append results
+            divergence_results.append({
+                'ticker': ticker,
+                'current_price': current_price,
+                'RSI': rsi_value,
+                'divergence': divergence
+            })
+        else:
+            divergence_results.append({
+                'ticker': ticker,
+                'current_price': current_price,
+                'RSI': rsi_value,
+                'divergence': 'no_data'
+            })
+
+    # Convert the results to a DataFrame
+    divergence_df = pd.DataFrame(divergence_results)
+
+    # Save the divergence results to the output CSV file
+    divergence_df.to_csv(output_csv_file, index=False)
+
+    print(f"Divergence results saved in {output_csv_file}.")
+    return divergence_df
+
+# Example usage
+input_csv_file = 'rsi_results.csv'
+output_csv_file = 'rsi_divergence.csv'
+
+# Check RSI divergence for all tickers
+check_rsi_divergence(input_csv_file, output_csv_file, kite, instrument_df)
+
+
+
+
+
