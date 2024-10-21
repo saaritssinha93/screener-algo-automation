@@ -16,6 +16,7 @@ os.chdir(cwd)
 
 scripts = [
     'et1_vol_selection.py',
+#    'et1_vol_selection_test.py',
     'et1_perchange_selection.py',
     'et1_rsi_60_rsidivergence_selection.py',
     'et1_significant_change_selection.py',
