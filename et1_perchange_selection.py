@@ -9,6 +9,10 @@ import logging
 import os
 import pandas as pd
 
+# Define the correct path
+cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
+os.chdir(cwd)
+
 # Set up logging to a file
 logging.basicConfig(filename='trading_log.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
