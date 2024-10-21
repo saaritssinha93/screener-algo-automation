@@ -11,6 +11,7 @@ import logging
 import os
 import datetime as dt
 import pandas as pd
+from datetime import datetime
 
 # Define the correct path
 cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
@@ -84,6 +85,7 @@ def fetch_current_price(ticker, kite, instrument_df):
         logging.error(f"Error fetching live price for {ticker}: {e}")
         return None
 
+
 def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target_percentage=2.0, sl_percentage=1.5, check_interval=60):
     """
     Monitor the paper trades for target and stop-loss conditions.
@@ -117,6 +119,9 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
             f.write('Ticker,Sell Price,Quantity Sold,Total Value Sold,Profit,Loss,Time\n')  # Write header
 
     while not active_trades.empty:
+        # Check current time
+        current_time = datetime.now()
+
         for index, row in active_trades.iterrows():
             ticker = row['Ticker']
             buy_price = row['Buy Price']
@@ -129,6 +134,9 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
             # Calculate target and stop-loss prices
             target_price = buy_price * (1 + target_percentage / 100)
             sl_price = buy_price * (1 - sl_percentage / 100)
+
+            # Print current status
+            print(f"Monitoring {ticker}: Current Price = ₹{current_price}, Target Price = ₹{target_price}, Stop-Loss Price = ₹{sl_price}")
 
             # Check for target hit
             if current_price >= target_price:
@@ -153,11 +161,16 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
                     f.write(f"{ticker},{current_price},{quantity},{total_value_sold},,{loss},{time.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
                 active_trades = active_trades.drop(index)  # Remove from active trades
-
+                
+        if (current_time.hour > 15) or (current_time.hour == 15 and current_time.minute >= 30):
+            print("End of trading day reached. Stopping monitoring.")
+            break  # Exit the loop if EOD is reached
+                
         # Sleep for the specified interval before the next check
         time.sleep(check_interval)
 
     print("Monitoring complete. All results have been logged to papertrade_result.csv.")
+
 
 def main():
     
