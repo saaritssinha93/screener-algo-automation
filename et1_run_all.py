@@ -20,8 +20,8 @@ scripts = [
     'et1_rsi_60_rsidivergence_selection.py',
     'et1_significant_change_selection.py',
     'et1_papertrade.py',
-    'et1_monitoring_papertrade_multiwindow_historical.py',
-#    'et1_monitoring_papertrade_multiwindow_live.py',
+#    'et1_monitoring_papertrade_multiwindow_historical.py',
+    'et1_monitoring_papertrade_multiwindow_live.py',
 ]
 
 for script in scripts:
