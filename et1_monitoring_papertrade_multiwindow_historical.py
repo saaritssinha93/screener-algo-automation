@@ -126,61 +126,97 @@ def fetch_historical_price(ticker, kite, instrument_df, start_time, end_time, in
         print(f"Error fetching historical data for {ticker}: {e}")
         return pd.DataFrame()  # Return empty DataFrame on error
 
-import multiprocessing
+
+
 import tkinter as tk
-from datetime import datetime, timedelta
+import pandas as pd
 import pytz
+from datetime import datetime
+import time
+import threading
 
-# Add the existing code here...
-
-def analyze_stock(stock, kite, instrument_df):
-    # Define the time range for historical data
-    local_tz = pytz.timezone('Asia/Kolkata')
-    end_time = datetime.now(local_tz)  # Current time in local timezone
-    start_time = end_time - timedelta(days=30)  # For example, last 30 days
-
-    # Fetch historical data and perform analysis
-    historical_prices = fetch_historical_price(stock, kite, instrument_df, start_time, end_time, interval='minute')
+def monitor_ticker_in_window(ticker, buy_price, quantity, total_value_bought, trade_time, kite, instrument_df, target_percentage, interval):
+    """
+    Monitor a single ticker in a separate tkinter window.
     
-    # Perform your analysis logic here
-    if not historical_prices.empty:
-        # Dummy analysis result for demonstration
-        average_price = historical_prices['close'].mean()
-        
-        # Create a result message
-        result_message = f"Analysis for {stock}:\nAverage Price: ₹{average_price:.2f}"
-    else:
-        result_message = f"No historical data available for {stock}."
-    
-    # Display the result in a popup window
-    show_popup(stock, result_message)
+    Args:
+    - ticker (str): The stock ticker to monitor.
+    - buy_price (float): Buy price of the ticker.
+    - quantity (int): Quantity of stocks bought.
+    - total_value_bought (float): Total value of the stocks bought.
+    - trade_time (datetime): Time the trade was made.
+    - kite (KiteConnect): Kite Connect instance for fetching historical prices.
+    - instrument_df (pd.DataFrame): DataFrame containing instrument information.
+    - target_percentage (float): Percentage target for profit.
+    - interval (str): Time interval for historical price data (default 'minute').
+    """
 
-def show_popup(stock, result_message):
+    # Create a pop-up window for the ticker
     root = tk.Tk()
-    root.title(f"Analysis for {stock}")
+    root.title(f"Monitoring {ticker}")
     
-    label = tk.Label(root, text=result_message, padx=20, pady=20)
-    label.pack()
-    
-    # Add a button to close the popup
-    button = tk.Button(root, text="Close", command=root.destroy)
-    button.pack(pady=10)
+    # Create a text widget to display results for each ticker
+    text_widget = tk.Text(root, height=20, width=100)
+    text_widget.pack()
 
-    # Start the GUI event loop
+    # Function to append text to the text widget
+    def append_text(message, window=text_widget):
+        window.insert(tk.END, message + '\n')
+        window.see(tk.END)  # Scroll to the end of the text widget
+        root.update()  # Update the window to refresh the UI
+
+    append_text(f"Monitoring {ticker} from {trade_time}...")
+
+    # Calculate target price
+    target_price = buy_price * (1 + target_percentage / 100)
+
+    # Define historical data time range (for backtesting)
+    local_tz = pytz.timezone('Asia/Kolkata')
+    start_time = trade_time
+    end_time = datetime.now(local_tz)  # Simulate monitoring until current time
+    
+    # Fetch historical prices
+    historical_prices = fetch_historical_price(ticker, kite, instrument_df, start_time, end_time, interval)
+    if historical_prices.empty:
+        append_text(f"No historical data available for {ticker}. Skipping.")
+        root.mainloop()
+        return
+
+    # Monitor each row in historical data
+    for _, price_row in historical_prices.iterrows():
+        current_time = pd.to_datetime(price_row['date']).tz_convert(local_tz)
+        current_price = price_row['close']
+
+        # Display monitoring data in the respective ticker window
+        append_text(f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Ticker: {ticker}, Current Price: ₹{current_price}")
+
+        # Check for target hit
+        if current_price >= target_price:
+            total_value_sold = current_price * quantity
+            profit = total_value_sold - total_value_bought
+            percentage_profit = (profit / total_value_bought) * 100
+
+            append_text(f"Target hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, "
+                        f"Profit: ₹{profit}, Percentage Profit: {percentage_profit:.2f}%, Sold Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            break
+
+        # Simulate time passing (1 second delay)
+        time.sleep(1)
+
     root.mainloop()
 
 def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv', target_percentage=2, interval='minute'):
     """
-    Continuously monitor paper trades using historical price data for backtesting.
+    Continuously monitor paper trades using historical price data for backtesting and open separate pop-up windows for each ticker.
     
     Args:
     - kite (KiteConnect): Kite Connect instance for fetching historical prices.
     - instrument_df (pd.DataFrame): DataFrame containing instrument information.
     - file_path (str): Path to the papertrade.csv file.
-    - target_percentage (float): Percentage target for profit (default 3%).
+    - target_percentage (float): Percentage target for profit (default 2%).
     - interval (str): Time interval for historical price data (default 'minute').
     """
-    
+
     # Read the paper trades
     try:
         paper_trades = pd.read_csv(file_path)
@@ -196,8 +232,11 @@ def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv
 
     # Set timezone
     local_tz = pytz.timezone('Asia/Kolkata')
-    
-    # Loop through each trade and start monitoring from the time it was bought
+
+    # Create threads for each ticker to run their own monitoring window
+    threads = []
+
+    # Loop through each trade and start monitoring in a separate thread
     for index, row in paper_trades.iterrows():
         ticker = row['Ticker']
         buy_price = row['Buy Price']
@@ -210,50 +249,18 @@ def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv
             trade_time = trade_time.tz_localize(local_tz)
         else:
             trade_time = trade_time.tz_convert(local_tz)
-        
-        print(f"Monitoring {ticker} from {trade_time}...")
 
-        # Calculate target price
-        target_price = buy_price * (1 + target_percentage / 100)
+        # Create a thread to run the monitor function for each ticker
+        thread = threading.Thread(
+            target=monitor_ticker_in_window,
+            args=(ticker, buy_price, quantity, total_value_bought, trade_time, kite, instrument_df, target_percentage, interval)
+        )
+        threads.append(thread)
+        thread.start()
 
-        # Define historical data time range (for backtesting)
-        start_time = trade_time
-        end_time = datetime.now(local_tz)  # Simulate monitoring until current time
-        
-        # Fetch historical prices
-        historical_prices = fetch_historical_price(ticker, kite, instrument_df, start_time, end_time, interval)
-        if historical_prices.empty:
-            print(f"No historical data available for {ticker}. Skipping.")
-            continue
-        
-        # Monitor each row in historical data
-        for _, price_row in historical_prices.iterrows():
-            current_time = pd.to_datetime(price_row['date']).tz_convert(local_tz)
-            current_price = price_row['close']
-
-            # Print monitoring data
-            print(f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Ticker: {ticker}, Current Price: ₹{current_price}")
-
-            # Check for target hit
-            if current_price >= target_price:
-                total_value_sold = current_price * quantity
-                profit = total_value_sold - total_value_bought
-                percentage_profit = (profit / total_value_bought) * 100
-
-                print(f"Target hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, "
-                      f"Profit: ₹{profit}, Percentage Profit: {percentage_profit:.2f}%, Sold Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
-                break
-            
-            # Simulate time passing (1 second delay)
-            time.sleep(1)
-
-        # Start the stock analysis in a separate process
-        process = multiprocessing.Process(target=analyze_stock, args=(ticker, kite, instrument_df))
-        process.start()
-
-    # Wait for all analysis processes to complete
-    for process in multiprocessing.active_children():
-        process.join()
+    # Wait for all threads to complete
+    for thread in threads:
+        thread.join()
 
 
 
@@ -362,7 +369,7 @@ def main():
     
     # Fetch instruments
     instrument_df = fetch_instruments(kite)
-    
+
     
     # Run the monitoring function
     monitor_paper_trades_backtest(kite, instrument_df)
