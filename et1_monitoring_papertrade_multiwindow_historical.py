@@ -205,7 +205,7 @@ def monitor_ticker_in_window(ticker, buy_price, quantity, total_value_bought, tr
 
     root.mainloop()
 
-def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv', target_percentage=2, interval='minute'):
+def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv', target_percentage=3, interval='minute'):
     """
     Continuously monitor paper trades using historical price data for backtesting and open separate pop-up windows for each ticker.
     

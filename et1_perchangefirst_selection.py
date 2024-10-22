@@ -180,9 +180,10 @@ def print_price_comparison(symbol):
         print(f"Error: Historical data not available for {symbol}")
 
 
+
 def print_high_growth_stocks():
     """
-    Prints the stock symbols with a growth of 2% or more and saves to perchangeprice.py.
+    Prints the stock symbols with a growth of 2% or more and saves to perchangeprice.csv.
     """
     logging.info("Stocks with 2% or more increase:")
 
@@ -190,25 +191,30 @@ def print_high_growth_stocks():
         # Sort the high_growth_stocks dictionary by the percent change in descending order
         sorted_stocks = sorted(high_growth_stocks.items(), key=lambda x: x[1][0], reverse=True)
         
-        # Prepare a list for the stock symbols
-        selected_stocks = []
+        # Prepare a list for the stock symbols and corresponding data for saving
+        stock_data = []
         
         for stock, (percent, volume_change) in sorted_stocks:
             if percent >= 2:  # Only consider stocks with 2% growth or more
-                selected_stocks.append(stock)
+                stock_data.append({
+                    'Stock': stock,
+                    'Percent Change': percent,
+                    'Volume Change': volume_change
+                })
                 print(f"{stock}: {percent:.2f}%   Volume Change: {volume_change:.2f}%")
         
-        # Write the selected stocks to et1_perchangeprice.py
-        with open("et1_perchangeprice.py", "w") as f:
-            f.write("shares = [\n")
-            f.write("    " + ", ".join(f"'{stock}'" for stock in selected_stocks) + "\n")
-            f.write("]\n")
+        # Convert the list of dictionaries to a DataFrame
+        df = pd.DataFrame(stock_data)
+        
+        # Save the DataFrame to a CSV file
+        df.to_csv("perchangeprice.csv", index=False)
 
-        logging.info("Saved high-growth stocks to perchangeprice.py")
+        logging.info("Saved high-growth stocks to perchangeprice.csv")
 
     else:
         logging.info("No stocks have increased by 2% or more.")
         print("No stocks have increased by 2% or more.")
+
 
 
         

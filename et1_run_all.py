@@ -15,13 +15,13 @@ os.chdir(cwd)
 
 
 scripts = [
-    'et1_vol_selection.py',
-#    'et1_vol_selection_test.py',
-    'et1_perchange_selection.py',
+    'et1_perchangefirst_selection.py',
+    'et1_vol_second_selection.py',
     'et1_rsi_60_rsidivergence_selection.py',
     'et1_significant_change_selection.py',
     'et1_papertrade.py',
-    'et1_monitoring_papertrade.py',
+    'et1_monitoring_papertrade_multiwindow_historical.py',
+#    'et1_monitoring_papertrade_multiwindow_live.py',
 ]
 
 for script in scripts:

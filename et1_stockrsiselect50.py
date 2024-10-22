@@ -156,7 +156,7 @@ output_csv_file = 'output.csv'
 results_df.to_csv(output_csv_file, index=False)
 
 print(f"RSI values stored in {output_csv_file}.")
-def select_stocks_with_rsi_above_50(kite, instrument_df, shares, interval='day', days=180, rsi_threshold=50):
+def select_stocks_with_rsi_above_50(kite, instrument_df, shares, interval='day', days=180, rsi_threshold=40):
     """
     Select stocks with RSI greater than 50 and store them in a file 'et1_select_stocklist.py'.
     
