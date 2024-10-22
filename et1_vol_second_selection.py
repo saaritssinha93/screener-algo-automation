@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Oct 11 17:41:53 2024
-
-@author: Saarit
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Zerodha kiteconnect automated authentication without a scheduler.
 """
 
@@ -25,7 +18,7 @@ cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
 
 sys.path.append('C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation')
-from et1_select_stocklist import shares
+from et1_perchangeprice import shares
 
 # Known market holidays for 2024 (example)
 market_holidays = [

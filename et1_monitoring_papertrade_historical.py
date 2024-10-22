@@ -74,37 +74,78 @@ def instrument_lookup(instrument_df, symbol):
         logging.error(f"Error in instrument lookup: {e}")
         return -1
 
-# Function to fetch live price
 def fetch_current_price(ticker, kite, instrument_df):
-    """Fetches the current live price of the given stock."""
+    """Function to fetch current price (can be modified to use historical data or live data)."""
+    # Implement this based on your KiteConnect setup
+    instrument_token = instrument_lookup(instrument_df, ticker)
+    if instrument_token == -1:
+        print(f"Instrument lookup failed for {ticker}")
+        return None
     try:
-        instrument = instrument_lookup(instrument_df, ticker)
-        live_price_data = kite.ltp(f"NSE:{ticker}")
-        return live_price_data[f"NSE:{ticker}"]["last_price"]
+        ltp_data = kite.ltp([f'NSE:{ticker}'])  # Assuming NSE tickers, adjust if needed
+        return ltp_data[f'NSE:{ticker}']['last_price']
     except Exception as e:
-        logging.error(f"Error fetching live price for {ticker}: {e}")
+        print(f"Error fetching current price for {ticker}: {e}")
         return None
 
-def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target_percentage=2.0, sl_percentage=1.5, check_interval=60):
+import time
+from datetime import datetime
+import pandas as pd
+import pytz
+
+def fetch_historical_price(ticker, kite, instrument_df, start_time, end_time, interval='minute'):
     """
-    Monitor the paper trades for target and stop-loss conditions.
+    Fetch historical price data for backtesting.
     
     Args:
-    - kite (KiteConnect): Kite Connect instance for fetching live prices.
+    - ticker (str): Stock ticker symbol.
+    - kite (KiteConnect): Kite Connect instance.
     - instrument_df (pd.DataFrame): DataFrame containing instrument information.
-    - file_path (str): Path to the papertrade.csv file.
-    - target_percentage (float): Percentage target for profit (default 2%).
-    - sl_percentage (float): Percentage stop-loss (default 1.5%).
-    - check_interval (int): Time interval in seconds to check prices (default 60 seconds).
+    - start_time (datetime): Start time for historical data.
+    - end_time (datetime): End time for historical data.
+    - interval (str): Time interval for the data (e.g., 'minute', '5minute').
+    
+    Returns:
+    - pd.DataFrame: DataFrame of historical price data.
     """
+    instrument_token = instrument_lookup(instrument_df, ticker)
+    if instrument_token == -1:
+        print(f"Instrument lookup failed for {ticker}")
+        return None
     
     try:
-        # Read the paper trades
+        # Adjust the start and end time format
+        start_time_str = start_time.strftime('%Y-%m-%d %H:%M:%S')
+        end_time_str = end_time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Fetch historical data from KiteConnect
+        historical_data = kite.historical_data(instrument_token, from_date=start_time_str, to_date=end_time_str, interval=interval)
+        return pd.DataFrame(historical_data)
+    
+    except Exception as e:
+        print(f"Error fetching historical data for {ticker}: {e}")
+        return pd.DataFrame()  # Return empty DataFrame on error
+
+
+
+def monitor_paper_trades_backtest(kite, instrument_df, file_path='papertrade.csv', target_percentage=2, interval='minute'):
+    """
+    Continuously monitor paper trades using historical price data for backtesting.
+    
+    Args:
+    - kite (KiteConnect): Kite Connect instance for fetching historical prices.
+    - instrument_df (pd.DataFrame): DataFrame containing instrument information.
+    - file_path (str): Path to the papertrade.csv file.
+    - target_percentage (float): Percentage target for profit (default 3%).
+    - interval (str): Time interval for historical price data (default 'minute').
+    """
+    
+    # Read the paper trades
+    try:
         paper_trades = pd.read_csv(file_path)
-        
-        # Initialize active_trades from paper_trades
-        active_trades = paper_trades.copy()
-        
+        if paper_trades.empty:
+            print("No active trades found.")
+            return
     except FileNotFoundError as e:
         print(f"File {file_path} not found: {e}")
         return
@@ -112,79 +153,65 @@ def monitor_paper_trades(kite, instrument_df, file_path='papertrade.csv', target
         print(f"Error reading {file_path}: {e}")
         return
 
-    if active_trades.empty:
-        print("No active trades found.")
-        return
+    # Set timezone
+    local_tz = pytz.timezone('Asia/Kolkata')
+    
+    # Loop through each trade and start monitoring from the time it was bought
+    for index, row in paper_trades.iterrows():
+        ticker = row['Ticker']
+        buy_price = row['Buy Price']
+        quantity = row['Quantity']
+        total_value_bought = row['Total Value Bought']
+        trade_time = pd.to_datetime(row['Time'])
 
-    sold_trades = pd.DataFrame(columns=['Ticker', 'Sell Price', 'Quantity Sold', 'Total Value Sold', 'Profit', 'Loss', 'Time'])
+        # Convert trade_time to local timezone if needed
+        if trade_time.tzinfo is None:
+            trade_time = trade_time.tz_localize(local_tz)
+        else:
+            trade_time = trade_time.tz_convert(local_tz)
+        
+        print(f"Monitoring {ticker} from {trade_time}...")
 
-    while not active_trades.empty:
-        current_time = datetime.now()
+        # Calculate target price
+        target_price = buy_price * (1 + target_percentage / 100)
 
-        for index, row in active_trades.iterrows():
-            ticker = row['Ticker']
-            buy_price = row['Buy Price']
-            quantity = row['Quantity']
-            total_value_bought = row['Total Value Bought']
+        # Define historical data time range (for backtesting)
+        start_time = trade_time
+        end_time = datetime.now(local_tz)  # Simulate monitoring until current time
+        
+        # Fetch historical prices
+        historical_prices = fetch_historical_price(ticker, kite, instrument_df, start_time, end_time, interval)
+        if historical_prices.empty:
+            print(f"No historical data available for {ticker}. Skipping.")
+            continue
+        
+        # Monitor each row in historical data
+        for _, price_row in historical_prices.iterrows():
+            current_time = pd.to_datetime(price_row['date']).tz_convert(local_tz)
+            current_price = price_row['close']
 
-            current_price = fetch_current_price(ticker, kite, instrument_df)
-            target_price = buy_price * (1 + target_percentage / 100)
-            sl_price = buy_price * (1 - sl_percentage / 100)
+            # Print monitoring data
+            print(f"[{current_time.strftime('%Y-%m-%d %H:%M:%S')}] Ticker: {ticker}, Current Price: ₹{current_price}")
 
             # Check for target hit
             if current_price >= target_price:
                 total_value_sold = current_price * quantity
                 profit = total_value_sold - total_value_bought
-                print(f"Target hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, Profit: ₹{profit}")
+                percentage_profit = (profit / total_value_bought) * 100
 
-                new_trade = pd.DataFrame({
-                    'Ticker': [ticker], 'Sell Price': [current_price], 'Quantity Sold': [quantity],
-                    'Total Value Sold': [total_value_sold], 'Profit': [profit], 'Loss': [None],
-                    'Time': [time.strftime('%Y-%m-%d %H:%M:%S')]
-                })
+                print(f"Target hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, "
+                      f"Profit: ₹{profit}, Percentage Profit: {percentage_profit:.2f}%, Sold Time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+                break
+            
+            # Simulate time passing (1 second delay)
+            time.sleep(1)
 
-                if not new_trade.isna().all().all():
-                    sold_trades = pd.concat([sold_trades, new_trade], ignore_index=True)
 
-                active_trades = active_trades.drop(index)
 
-            # Check for stop-loss hit
-            elif current_price <= sl_price:
-                total_value_sold = current_price * quantity
-                loss = total_value_bought - total_value_sold
-                print(f"Stop-loss hit for {ticker}! Sold at ₹{current_price}, Total Value Sold: ₹{total_value_sold}, Loss: ₹{loss}")
 
-                new_trade = pd.DataFrame({
-                    'Ticker': [ticker], 'Sell Price': [current_price], 'Quantity Sold': [quantity],
-                    'Total Value Sold': [total_value_sold], 'Profit': [None], 'Loss': [loss],
-                    'Time': [time.strftime('%Y-%m-%d %H:%M:%S')]
-                })
 
-                if not new_trade.isna().all().all():
-                    sold_trades = pd.concat([sold_trades, new_trade], ignore_index=True)
 
-                active_trades = active_trades.drop(index)
 
-        calculate_and_print_investment_status(active_trades, sold_trades)
-
-        if (current_time.hour > 15) or (current_time.hour == 15 and current_time.minute >= 30):
-            print("End of trading day reached. Stopping monitoring.")
-            break
-
-        time.sleep(check_interval)
-
-    # Save the sold trades to a CSV file with 5 blank rows before the next entry
-    if not sold_trades.empty:
-        # Create a DataFrame with 5 blank rows
-        blank_rows = pd.DataFrame([[''] * sold_trades.shape[1]] * 2, columns=sold_trades.columns)
-        
-        # Concatenate the blank rows with sold trades
-        to_save = pd.concat([sold_trades, blank_rows], ignore_index=True)
-        
-        # Append to the CSV file
-        to_save.to_csv('papertrade_result.csv', mode='a', header=not pd.io.common.file_exists('papertrade_result.csv'), index=False)
-
-    print("Monitoring complete. All results have been logged to papertrade_result.csv.")
 
 
 
@@ -288,7 +315,7 @@ def main():
 
     
     # Run the monitoring function
-    monitor_paper_trades(kite, instrument_df)
+    monitor_paper_trades_backtest(kite, instrument_df)
 
 if __name__ == "__main__":
     main()

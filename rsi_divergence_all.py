@@ -21,7 +21,7 @@ os.chdir(cwd)
 
 # Stocks to analyze
 sys.path.append('C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation')
-from et1_stock_tickers_test import shares
+from et1_select_stocklist import shares
 
 # Generate trading session
 try:
