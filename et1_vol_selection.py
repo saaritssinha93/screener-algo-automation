@@ -191,7 +191,7 @@ def calculate_30_day_sma_volume(ticker, start_date, end_date, kite, instrument_d
         logging.error(f"Error calculating 30-day SMA for {ticker}: {e}")
         return pd.DataFrame()
 
-def select_high_volume_stocks(ticker, start_date, end_date, kite, instrument_df, volume_multiplier=1.3):
+def select_high_volume_stocks(ticker, start_date, end_date, kite, instrument_df, volume_multiplier=0.5):
     """Function to select stocks where the current volume is 1.5 times the 30-day SMA of volume."""
     today = dt.date.today()
 

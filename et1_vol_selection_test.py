@@ -25,7 +25,7 @@ cwd = "C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation"
 os.chdir(cwd)
 
 sys.path.append('C:\\Users\\Saarit\\OneDrive\\Desktop\\Trading\\screener-algo-automation')
-from et1_stock_tickers_test import shares
+from et1_select_stocklist import shares
 
 # Known market holidays for 2024 (example)
 market_holidays = [
